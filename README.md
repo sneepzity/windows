@@ -13,3 +13,8 @@ installapps.ps1:
 notinwinget.ps1:
 
 ```irm https://raw.githubusercontent.com/sneepzity/windows/refs/heads/main/notinwinget.ps1 | iex```
+
+
+preliminary.ps1:
+
+```irm https://raw.githubusercontent.com/sneepzity/windows/refs/heads/main/preliminary.ps1 | iex```
