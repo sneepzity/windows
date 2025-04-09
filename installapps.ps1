@@ -1,14 +1,11 @@
 # PowerShell Script to Selectively Install Applications using Winget
 # Includes Winget check/install attempt and logging to Documents folder.
-
 # --- Configuration ---
 # Set to $false if you want to manually review the winget installer script from winget.pro first
 $AutoInstallWinget = $true
-
 # --- Winget Check ---
 Write-Host "Checking for Winget command..." -ForegroundColor Yellow
 $wingetCmd = Get-Command winget -ErrorAction SilentlyContinue
-
 if ($null -eq $wingetCmd) {
     Write-Warning "Winget command not found."
     if ($AutoInstallWinget) {
@@ -16,25 +13,20 @@ if ($null -eq $wingetCmd) {
         Write-Warning "SECURITY NOTE: Running scripts directly from the internet (like 'irm | iex') carries risks."
         Write-Warning "winget.pro is a community resource, ensure you trust it or review its script manually first."
         Write-Warning "The official way to get Winget is via the 'App Installer' package in the Microsoft Store."
-
         try {
             # Safer approach - download script first, then execute if desired
             $tempScriptPath = Join-Path $env:TEMP "InstallWinget.ps1"
             Invoke-RestMethod -Uri "https://winget.pro" -OutFile $tempScriptPath
-            
             # Display first few lines of script for review (optional)
             Write-Host "First 10 lines of downloaded script (review):" -ForegroundColor Cyan
             Get-Content $tempScriptPath -TotalCount 10 | ForEach-Object { Write-Host "  $_" }
-            
             # Prompt for confirmation before executing
             $confirmation = Read-Host "Do you want to proceed with running this script? (Y/N)"
             if ($confirmation -eq 'Y' -or $confirmation -eq 'y') {
                 # Execute the script
                 & $tempScriptPath
-                
                 # Wait a moment for changes to potentially register
                 Start-Sleep -Seconds 5
-                
                 # Verify installation
                 $wingetCmd = Get-Command winget -ErrorAction SilentlyContinue
                 if ($null -eq $wingetCmd) {
@@ -66,7 +58,6 @@ if ($null -eq $wingetCmd) {
 } else {
     Write-Host "Winget found." -ForegroundColor Green
 }
-
 # --- Define App List ---
 Write-Host "Preparing list of available applications..." -ForegroundColor Cyan
 # Define list of applications with names, IDs, and descriptions
@@ -100,7 +91,6 @@ $apps = @(
     [PSCustomObject]@{Name="Patch My PC Home Updater"; ID="PatchMyPC.PatchMyPC"; Description="Utility to check for and install updates for many third-party applications."}
     [PSCustomObject]@{Name="Windows Terminal"; ID="Microsoft.WindowsTerminal"; Description="Modern terminal application from Microsoft with tabs and customization."}
 )
-
 # --- Display Application Menu with Descriptions ---
 Write-Host "--------------------------------------------------" -ForegroundColor Green
 Write-Host "Available applications to install via Winget:" -ForegroundColor Green
@@ -110,20 +100,16 @@ for ($i = 0; $i -lt $apps.Count; $i++) {
     Write-Host ("    - {0}" -f $apps[$i].Description) -ForegroundColor Gray # Simple dash instead of special characters
 }
 Write-Host "--------------------------------------------------"
-
 # --- Get User Selection with Improved Validation ---
 $userInput = $null
 while ($userInput -eq $null) {
     $rawInput = Read-Host "Enter the numbers for the apps you want to install, separated by commas WITHOUT spaces (e.g. 1,5,12)"
-    
     # More thorough validation
     $isValid = $true
     $selectedIndices = @()
-    
     # Early validation of format
     if ($rawInput -match '^[1-9]\d*(,[1-9]\d*)*$') {
         $inputNumbers = $rawInput -split ','
-        
         foreach ($num in $inputNumbers) {
             $index = [int]$num
             # Check if within valid range (1 to apps.Count)
@@ -134,7 +120,6 @@ while ($userInput -eq $null) {
             }
             $selectedIndices += $index
         }
-        
         if ($isValid) {
             $userInput = $rawInput
         }
@@ -142,7 +127,6 @@ while ($userInput -eq $null) {
         Write-Warning "Invalid input format. Please enter only numbers separated by commas (e.g. 1,5,12)."
     }
 }
-
 # --- Install Selected Applications ---
 Write-Host "Installing selected applications..." -ForegroundColor Cyan
 $inputNumbers = $userInput -split ','
@@ -153,7 +137,6 @@ foreach ($num in $inputNumbers) {
     winget install --id=$selectedApp.ID --silent --accept-package-agreements --accept-source-agreements
 }
 Write-Host "Installation process completed." -ForegroundColor Green
-
 # --- Prepare for Installation & Logging ---
 $selectedIndices = $userInput -split ',' # Split string into array of number strings
 $documentsPath = [Environment]::GetFolderPath('MyDocuments')
@@ -163,35 +146,27 @@ if (-not (Test-Path -Path $documentsPath)) {
 }
 $logFileName = "winget_install_log_$(Get-Date -Format 'yyyy-MM-dd_HH-mm-ss').txt"
 $logFilePath = Join-Path -Path $documentsPath -ChildPath $logFileName
-
 Write-Host "`nStarting installation process for selected apps..." -ForegroundColor Green
 Write-Host "A detailed log of this session will be saved to: $logFilePath" -ForegroundColor Cyan
 Write-Host "(This includes successes, failures, and Winget command output)"
-
 # --- Process Selection and Install (with Logging using Start-Transcript) ---
 $ErrorOccurred = $false # Flag to track if any install failed
-
 try {
     # Start logging everything that appears in the console (output and errors) to the file
     # -Force overwrites if file somehow exists from same second
     Start-Transcript -Path $logFilePath -Force
-
     Write-Host "`n--- Installation Log Start ---" # Marker for log file readability
-
     foreach ($selectedIndexStr in $selectedIndices) {
         # Convert string to integer number
         $selectedIndex = [int]$selectedIndexStr - 1 # Convert to 0-based index
-
         # Validation already done above, but keeping this as an additional safety check
         if ($selectedIndex -ge 0 -and $selectedIndex -lt $apps.Count) {
             $appToInstall = $apps[$selectedIndex]
             $name = $appToInstall.Name
             $id = $appToInstall.ID
             $source = $appToInstall.Source # May be null for most apps, which is fine
-
             Write-Host "--------------------------------------------------"
             Write-Host "Attempting to install: [$($selectedIndex+1)] $name (ID: $id)" # No color change needed, transcript captures it
-
             # Prepare the winget command
             $wingetParams = @(
                 "install"
@@ -202,28 +177,24 @@ try {
                 "--silent"
                 "--disable-interactivity"
             )
-            
             # Add source parameter if specified
             if (-not [string]::IsNullOrEmpty($source)) {
                 $wingetParams += "--source"
                 $wingetParams += $source
             }
-
             # Execute winget command with parameters
             & winget $wingetParams
             $installExitCode = $LASTEXITCODE
-
             # Check if installation was successful
             if ($installExitCode -eq 0) {
                 Write-Host "$name installed successfully."
-                
                 # Verify installation by checking if the app is now in the list of installed apps
                 $verifyResult = & winget list --id $id --exact
-if ($verifyResult -match [regex]::Escape($id)) {
-    Write-Host "Verified: $name is now installed." -ForegroundColor Green
-} else {
-    Write-Host "Warning: Verification failed..." -ForegroundColor Yellow
-}
+                if ($verifyResult -match [regex]::Escape($id)) {
+                    Write-Host "Verified: $name is now installed." -ForegroundColor Green
+                } else {
+                    Write-Host "Warning: $name installation reported success but verification failed. It might need system restart to complete." -ForegroundColor Yellow
+                }
             } else {
                 $ErrorOccurred = $true # Mark that at least one error happened
                 # Provide feedback based on common winget error codes
@@ -243,9 +214,7 @@ if ($verifyResult -match [regex]::Escape($id)) {
             Write-Warning "Invalid selection: '$($selectedIndexStr)' is not a valid number in the list (1 - $($apps.Count)). Skipping."
         }
     } # End foreach loop
-
     Write-Host "`n--- Installation Log End ---" # Marker for log file
-
 } catch {
     $ErrorOccurred = $true
     Write-Error "An unexpected error occurred: $($_.Exception.Message)"
@@ -260,7 +229,6 @@ if ($verifyResult -match [regex]::Escape($id)) {
         Write-Warning "One or more errors occurred during the process. Please review the log file for details."
     }
 }
-
 # --- Final Script Message ---
 Write-Host "--------------------------------------------------"
 Write-Host "Script execution completed." -ForegroundColor Green
