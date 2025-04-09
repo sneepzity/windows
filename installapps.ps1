@@ -10,46 +10,36 @@ if ($null -eq $wingetCmd) {
     if ($AutoInstallWinget) {
         try {
             Write-Host "Installing Winget via PowerShell Gallery..." -ForegroundColor Cyan
-            # Set execution policy if needed
             $currentPolicy = Get-ExecutionPolicy
             if ($currentPolicy -eq "Restricted") {
-                Write-Host "Temporarily setting execution policy to RemoteSigned..." -ForegroundColor Yellow
+                Write-Host "Temporarily setting execution policy..." -ForegroundColor Yellow
                 Set-ExecutionPolicy RemoteSigned -Scope CurrentUser -Force
             }
             
-            # Install winget-install script
             Install-Script -Name winget-install -Force -Scope CurrentUser
             Import-Module "$env:USERPROFILE\Documents\WindowsPowerShell\Modules\winget-install"
-            
-            # Execute installation
             winget-install -Force
             
-            # Restore original execution policy if needed
             if ($currentPolicy -eq "Restricted") {
                 Write-Host "Restoring original execution policy..." -ForegroundColor Yellow
                 Set-ExecutionPolicy Restricted -Scope CurrentUser -Force
             }
             
-            # Verify installation
             $wingetCmd = Get-Command winget -ErrorAction SilentlyContinue
-            if ($null -ne $wingetCmd) {
-                Write-Host "Winget installed successfully." -ForegroundColor Green
-            } else {
-                throw "Winget installation failed"
-            }
+            if ($null -eq $wingetCmd) { throw "Winget installation failed" }
         } catch {
             Write-Error "Winget installation failed: $($_.Exception.Message)"
             exit 1
         }
     } else {
-        Write-Error "Winget not found and automatic installation is disabled."
+        Write-Error "Winget not found and automatic installation disabled."
         exit 1
     }
 } else {
     Write-Host "Winget found." -ForegroundColor Green
 }
 
-# --- Define App List ---
+# --- Define App List (Updated) ---
 $apps = @(
     [PSCustomObject]@{Name="All Apps"; ID="SELECT_ALL"; Description="Install all available applications"}
     [PSCustomObject]@{Name="Greenshot"; ID="Greenshot.Greenshot"; Description="Screen capture tool with annotation features."}
@@ -75,7 +65,6 @@ $apps = @(
     [PSCustomObject]@{Name="AutoHotkey"; ID="AutoHotkey.AutoHotkey"; Description="Scripting language for task automation and creating hotkeys."}
     [PSCustomObject]@{Name="Playnite Game Launcher"; ID="Playnite.Playnite"; Description="Open-source launcher for managing multiple game libraries."}
     [PSCustomObject]@{Name="Vesktop (Discord Client)"; ID="Vencord.Vesktop"; Description="Alternative Discord desktop client focused on performance/features."}
-    [PSCustomObject]@{Name="Dual Monitor Tools"; ID="DualMonitorTools.DualMonitorTools"; Description="Utilities for managing multiple monitors (hotkeys, wallpaper, etc.)."}
     [PSCustomObject]@{Name="Microsoft PowerToys"; ID="Microsoft.PowerToys"; Description="Set of utilities for power users to tune Windows experience."}
     [PSCustomObject]@{Name="Rainmeter Desktop Customization"; ID="Rainmeter.Rainmeter"; Description="Tool for displaying customizable skins/widgets on the desktop."}
     [PSCustomObject]@{Name="Patch My PC Home Updater"; ID="PatchMyPC.PatchMyPC"; Description="Utility to check for and install updates for many third-party applications."}
@@ -129,7 +118,8 @@ try {
         Write-Host "--------------------------------------------------"
         Write-Host "Installing: $($app.Name) ($($app.ID))" -ForegroundColor Yellow
         
-        $params = @("install", "--id", $app.ID, "--exact", "--silent", "--accept-package-agreements", "--accept-source-agreements")
+        $params = @("install", "--id", $app.ID, "--exact", "--silent", 
+                   "--accept-package-agreements", "--accept-source-agreements")
         if ($app.Source) { $params += "--source", $app.Source }
 
         & winget $params
