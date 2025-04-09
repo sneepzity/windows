@@ -32,10 +32,38 @@ Enter numbers (1-3) separated by commas (no spaces):
 $scripts = @{
     "1" = 'irm https://christitus.com/win | iex'
     "2" = 'irm https://get.activated.win | iex'
-    "3" = 'irm winget.pro | iex'
 }
 
 $choice.Split(',') | ForEach-Object {
     Write-Host "Executing script $_..." -ForegroundColor Cyan
-    Invoke-Expression $scripts[$_]
+    if ($_ -eq "3") {
+        # Winget installation using winget-install method
+        try {
+            Write-Host "Installing Winget via PowerShell Gallery..." -ForegroundColor Cyan
+            $currentPolicy = Get-ExecutionPolicy
+            if ($currentPolicy -eq "Restricted") {
+                Write-Host "Temporarily setting execution policy..." -ForegroundColor Yellow
+                Set-ExecutionPolicy RemoteSigned -Scope CurrentUser -Force
+            }
+            
+            Write-Host "Installing winget-install module..." -ForegroundColor Yellow
+            Install-Script -Name winget-install -Force -Scope CurrentUser -ErrorAction Stop
+            Import-Module "$env:USERPROFILE\Documents\WindowsPowerShell\Modules\winget-install" -ErrorAction Stop
+            
+            Write-Host "Executing winget installation..." -ForegroundColor Yellow
+            winget-install -Force -ErrorAction Stop
+            
+            if ($currentPolicy -eq "Restricted") {
+                Write-Host "Restoring original execution policy..." -ForegroundColor Yellow
+                Set-ExecutionPolicy Restricted -Scope CurrentUser -Force
+            }
+            
+            Write-Host "Winget installation completed successfully." -ForegroundColor Green
+        } catch {
+            Write-Error "Winget installation failed: $($_.Exception.Message)"
+            exit 1
+        }
+    } else {
+        Invoke-Expression $scripts[$_]
+    }
 }
