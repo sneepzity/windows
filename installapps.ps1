@@ -18,30 +18,49 @@ if ($null -eq $wingetCmd) {
         Write-Warning "The official way to get Winget is via the 'App Installer' package in the Microsoft Store."
 
         try {
-            # Execute the user-requested command to install Winget
-            Invoke-RestMethod winget.pro | Invoke-Expression
-            # Wait a moment for changes to potentially register
-            Start-Sleep -Seconds 5
-            # Verify installation
-            $wingetCmd = Get-Command winget -ErrorAction SilentlyContinue
-            if ($null -eq $wingetCmd) {
-                Write-Error "Winget installation via script failed or requires a shell restart/system update."
-                Write-Error "Please install/update 'App Installer' from the Microsoft Store manually and try running this script again."
-                Read-Host "Press Enter to exit."
-                exit 1 # Exit with an error code
+            # Safer approach - download script first, then execute if desired
+            $tempScriptPath = Join-Path $env:TEMP "InstallWinget.ps1"
+            Invoke-RestMethod -Uri "https://winget.pro" -OutFile $tempScriptPath
+            
+            # Display first few lines of script for review (optional)
+            Write-Host "First 10 lines of downloaded script (review):" -ForegroundColor Cyan
+            Get-Content $tempScriptPath -TotalCount 10 | ForEach-Object { Write-Host "  $_" }
+            
+            # Prompt for confirmation before executing
+            $confirmation = Read-Host "Do you want to proceed with running this script? (Y/N)"
+            if ($confirmation -eq 'Y' -or $confirmation -eq 'y') {
+                # Execute the script
+                & $tempScriptPath
+                
+                # Wait a moment for changes to potentially register
+                Start-Sleep -Seconds 5
+                
+                # Verify installation
+                $wingetCmd = Get-Command winget -ErrorAction SilentlyContinue
+                if ($null -eq $wingetCmd) {
+                    Write-Error "Winget installation via script failed or requires a shell restart/system update."
+                    Write-Error "Please install/update 'App Installer' from the Microsoft Store manually and try running this script again."
+                    Read-Host "Press Enter to exit"
+                    exit 1 # Exit with an error code
+                } else {
+                    Write-Host "Winget command is now available." -ForegroundColor Green
+                }
             } else {
-                Write-Host "Winget command is now available." -ForegroundColor Green
+                Write-Error "Winget installation cancelled by user."
+                Write-Error "Please install/update 'App Installer' from the Microsoft Store manually and try running this script again."
+                Read-Host "Press Enter to exit"
+                exit 1
             }
         } catch {
             Write-Error "An error occurred during the Winget installation script execution: $($_.Exception.Message)"
             Write-Error "Please install/update 'App Installer' from the Microsoft Store manually and try running this script again."
-            Read-Host "Press Enter to exit."
+            Read-Host "Press Enter to exit"
             exit 1
         }
     } else {
          Write-Error "Winget not found and automatic installation is disabled."
          Write-Error "Please install/update 'App Installer' from the Microsoft Store manually and try running this script again."
-         Read-Host "Press Enter to exit."
+         Read-Host "Press Enter to exit"
          exit 1
     }
 } else {
@@ -71,15 +90,14 @@ $apps = @(
     [PSCustomObject]@{Name="EarTrumpet Audio Control"; ID="File-New-Project.EarTrumpet"; Description="Advanced volume control application for Windows."}
     [PSCustomObject]@{Name="Spotify"; ID="Spotify.Spotify"; Description="Music streaming service client."}
     [PSCustomObject]@{Name="Spicetify CLI"; ID="Spicetify.SpicetifyCLI"; Description="Command-line tool to customize the official Spotify client."}
-    [PSCustomObject]@{Name="YouTube Music (th-ch)"; ID="th-ch.YouTubeMusic"; Description="Desktop client for YouTube Music (Note: ID may require specific source)."}
+    [PSCustomObject]@{Name="YouTube Music (th-ch)"; ID="th-ch.YouTubeMusic"; Source="winget"; Description="Desktop client for YouTube Music."}
     [PSCustomObject]@{Name="AutoHotkey"; ID="AutoHotkey.AutoHotkey"; Description="Scripting language for task automation and creating hotkeys."}
     [PSCustomObject]@{Name="Playnite Game Launcher"; ID="Playnite.Playnite"; Description="Open-source launcher for managing multiple game libraries."}
     [PSCustomObject]@{Name="Vesktop (Discord Client)"; ID="Vesktop.Vesktop"; Description="Alternative Discord desktop client focused on performance/features."}
     [PSCustomObject]@{Name="Dual Monitor Tools"; ID="DualMonitorTools.DualMonitorTools"; Description="Utilities for managing multiple monitors (hotkeys, wallpaper, etc.)."}
     [PSCustomObject]@{Name="Microsoft PowerToys"; ID="Microsoft.PowerToys"; Description="Set of utilities for power users to tune Windows experience."}
     [PSCustomObject]@{Name="Rainmeter Desktop Customization"; ID="Rainmeter.Rainmeter"; Description="Tool for displaying customizable skins/widgets on the desktop."}
-    , # <-- Comma added here after the previous item
-    [PSCustomObject]@{Name="Patch My PC Home Updater"; ID="PatchMyPC.PatchMyPC"; Description="Utility to check for and install updates for many third-party applications."} # Added this line
+    [PSCustomObject]@{Name="Patch My PC Home Updater"; ID="PatchMyPC.PatchMyPC"; Description="Utility to check for and install updates for many third-party applications."}
 )
 
 # --- Display Application Menu with Descriptions ---
@@ -87,19 +105,40 @@ Write-Host "--------------------------------------------------" -ForegroundColor
 Write-Host "Available applications to install via Winget:" -ForegroundColor Green
 Write-Host "--------------------------------------------------"
 for ($i = 0; $i -lt $apps.Count; $i++) {
-    Write-Host ("[{0}] {1}" -f ($i + 1), $apps[$i].Name) -ForegroundColor White # Display 1-based index and Name
-    Write-Host ("    └─ {0}" -f $apps[$i].Description) -ForegroundColor Gray # Display indented description
+    Write-Host ("[{0}] {1}" -f ($i + 1), $apps[$i].Name) -ForegroundColor White
+    Write-Host ("    - {0}" -f $apps[$i].Description) -ForegroundColor Gray # Simple dash instead of special characters
 }
 Write-Host "--------------------------------------------------"
 
-# --- Get User Selection ---
+# --- Get User Selection with Improved Validation ---
 $userInput = $null
 while ($userInput -eq $null) {
-    $rawInput = Read-Host "Enter the numbers for the apps you want to install, separated by commas WITHOUT spaces (e.g., 1,5,12,26)"
-    if ($rawInput -match '^[1-9]\d*(,[1-9]\d*)*$') { # Basic validation
-         $userInput = $rawInput
+    $rawInput = Read-Host "Enter the numbers for the apps you want to install, separated by commas WITHOUT spaces (e.g. 1,5,12)"
+    
+    # More thorough validation
+    $isValid = $true
+    $selectedIndices = @()
+    
+    # Early validation of format
+    if ($rawInput -match '^[1-9]\d*(,[1-9]\d*)*$') {
+        $inputNumbers = $rawInput -split ','
+        
+        foreach ($num in $inputNumbers) {
+            $index = [int]$num
+            # Check if within valid range (1 to apps.Count)
+            if ($index -lt 1 -or $index -gt $apps.Count) {
+                Write-Warning "Invalid selection: '$num' is not in range (1-$($apps.Count)). Please try again."
+                $isValid = $false
+                break
+            }
+            $selectedIndices += $index
+        }
+        
+        if ($isValid) {
+            $userInput = $rawInput
+        }
     } else {
-         Write-Warning "Invalid input format. Please enter only numbers separated by commas (e.g., 1,5,12)."
+        Write-Warning "Invalid input format. Please enter only numbers separated by commas (e.g. 1,5,12)."
     }
 }
 
@@ -122,7 +161,7 @@ $ErrorOccurred = $false # Flag to track if any install failed
 
 try {
     # Start logging everything that appears in the console (output and errors) to the file
-    # -Force overwrites if file somehow exists from same second; -Append adds if file exists
+    # -Force overwrites if file somehow exists from same second
     Start-Transcript -Path $logFilePath -Force
 
     Write-Host "`n--- Installation Log Start ---" # Marker for log file readability
@@ -131,41 +170,75 @@ try {
         # Convert string to integer number
         $selectedIndex = [int]$selectedIndexStr - 1 # Convert to 0-based index
 
-        # Validate if the number is within the valid range
+        # Validation already done above, but keeping this as an additional safety check
         if ($selectedIndex -ge 0 -and $selectedIndex -lt $apps.Count) {
             $appToInstall = $apps[$selectedIndex]
             $name = $appToInstall.Name
             $id = $appToInstall.ID
+            $source = $appToInstall.Source # May be null for most apps, which is fine
 
             Write-Host "--------------------------------------------------"
             Write-Host "Attempting to install: [$($selectedIndex+1)] $name (ID: $id)" # No color change needed, transcript captures it
 
-            # Execute winget command
-            winget install --id $id --exact --accept-package-agreements --accept-source-agreements --silent --disable-interactivity
+            # Prepare the winget command
+            $wingetParams = @(
+                "install"
+                "--id", $id
+                "--exact"
+                "--accept-package-agreements"
+                "--accept-source-agreements"
+                "--silent"
+                "--disable-interactivity"
+            )
+            
+            # Add source parameter if specified
+            if (-not [string]::IsNullOrEmpty($source)) {
+                $wingetParams += "--source"
+                $wingetParams += $source
+            }
 
-            # Check the exit code
-            if ($LASTEXITCODE -eq 0) {
+            # Execute winget command with parameters
+            & winget $wingetParams
+            $installExitCode = $LASTEXITCODE
+
+            # Check if installation was successful
+            if ($installExitCode -eq 0) {
                 Write-Host "$name installed successfully."
+                
+                # Verify installation by checking if the app is now in the list of installed apps
+                $verifyResult = & winget list --id $id --exact
+                
+                if ($verifyResult -match $id) {
+                    Write-Host "Verified: $name is now installed." -ForegroundColor Green
+                } else {
+                    Write-Host "Warning: $name installation reported success but verification failed. It might need system restart to complete." -ForegroundColor Yellow
+                }
             } else {
                 $ErrorOccurred = $true # Mark that at least one error happened
                 # Provide feedback based on common winget error codes
-                switch ($LASTEXITCODE) {
-                    0x8A15000F { Write-Host "Installation failed for $name. Reason: Package not found (ID '$id' might be incorrect or require a different source). (Exit Code: $LASTEXITCODE)" }
-                    0x8A150015 { Write-Host "Installation failed for $name. Reason: The installer process failed unexpectedly. (Exit Code: $LASTEXITCODE)" }
-                    0x8A150010 { Write-Host "Installation failed for $name. Reason: Download error occurred. Check network connection. (Exit Code: $LASTEXITCODE)" }
+                switch ($installExitCode) {
+                    -1978335231 { Write-Host "Installation failed for $name. Reason: Package not found (ID '$id' might be incorrect or require a different source). (Exit Code: $installExitCode)" }
+                    -1978335243 { Write-Host "Installation failed for $name. Reason: The installer process failed unexpectedly. (Exit Code: $installExitCode)" }
+                    -1978335232 { Write-Host "Installation failed for $name. Reason: Download error occurred. Check network connection. (Exit Code: $installExitCode)" }
+                    -1978335242 { Write-Host "Installation failed for $name. Reason: Package is already installed. (Exit Code: $installExitCode)" }
                     # Add more known codes here if desired
-                    default { Write-Host "Installation command finished with issues for $name (Exit Code: $LASTEXITCODE)." }
+                    default { Write-Host "Installation command finished with issues for $name (Exit Code: $installExitCode)." }
                 }
-                 Write-Host "Details should be available in the log file. You might need to install it manually, check the ID '$id', or run 'winget source update'."
+                Write-Host "Details should be available in the log file. You might need to install it manually, check the ID '$id', or run 'winget source update'."
             }
         } else {
-             $ErrorOccurred = $true # Mark invalid input as an error for notification purposes
-             Write-Warning "Invalid selection: '$($selectedIndexStr)' is not a valid number in the list (1 - $($apps.Count)). Skipping."
+            # This should never happen due to our improved validation, but keeping as a failsafe
+            $ErrorOccurred = $true
+            Write-Warning "Invalid selection: '$($selectedIndexStr)' is not a valid number in the list (1 - $($apps.Count)). Skipping."
         }
     } # End foreach loop
 
-     Write-Host "`n--- Installation Log End ---" # Marker for log file
+    Write-Host "`n--- Installation Log End ---" # Marker for log file
 
+} catch {
+    $ErrorOccurred = $true
+    Write-Error "An unexpected error occurred: $($_.Exception.Message)"
+    Write-Error "Stack Trace: $($_.ScriptStackTrace)"
 } finally {
     # This block *always* runs, ensuring the transcript is stopped even if errors occur
     Stop-Transcript
@@ -173,11 +246,13 @@ try {
     Write-Host "`nInstallation attempt finished." -ForegroundColor Green
     Write-Host "Log file saved to: $logFilePath" -ForegroundColor Cyan
     if ($ErrorOccurred) {
-         Write-Warning "One or more errors occurred during the process. Please review the log file for details."
+        Write-Warning "One or more errors occurred during the process. Please review the log file for details."
     }
 }
 
 # --- Final Script Message ---
 Write-Host "--------------------------------------------------"
 Write-Host "Script execution completed." -ForegroundColor Green
+Write-Host "To install additional applications, run this script again."
+Read-Host "Press Enter to exit"
 # End of Script

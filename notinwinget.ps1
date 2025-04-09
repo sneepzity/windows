@@ -1,23 +1,3 @@
-<#
-.SYNOPSIS
- Downloads specific wallpapers to Pictures\Wallpapers and allows interactive selection
- and download of utilities/drivers to the Downloads folder.
-
-.DESCRIPTION
- 1. Automatically downloads a predefined list of wallpaper images from imgcdn.dev.
- 2. Renames wallpapers according to a specific list, preserving file extensions.
- 3. Saves wallpapers into the user's Pictures\Wallpapers folder (creates if needed).
- 4. Presents an interactive menu for selecting predefined utilities/drivers.
- 5. Downloads only the user-selected utilities/drivers to the user's main Downloads folder using BITS.
- 6. Does NOT execute any downloaded files.
-
-.NOTES
- - May require running as Administrator if BITS service needs control or folder permissions are restricted.
- - Uses Invoke-WebRequest for wallpapers and Start-BitsTransfer for utilities.
- - BITS (Background Intelligent Transfer Service) must be running.
- - File definitions are based on user input and brief online searches.
-#>
-
 #Requires -Version 5.1 # Requires PowerShell 5.1+ for Invoke-WebRequest enhancements & PSCustomObject syntax clarity
 # Potentially Requires -RunAsAdministrator
 
@@ -87,64 +67,64 @@ Write-Host "`n--- Task 2: Select Utilities/Drivers to Download ---" -ForegroundC
 
 try {
     # Define Downloads Folder Path
-    $downloadsPath = Join-Path -Path ([Environment]::GetFolderPath('UserProfile')) -ChildPath 'Downloads'
+    $downloadsPath = [Environment]::GetFolderPath('UserProfile')
+    $downloadsPath = Join-Path -Path $downloadsPath -ChildPath 'Downloads'
+    
     if (-not (Test-Path -Path $downloadsPath -PathType Container)) {
-         Write-Error "Downloads folder not found at '$downloadsPath'. Cannot proceed with utility downloads."
-         # Stop the script or the rest of this section if Downloads folder is essential
-         exit 1
+        Write-Host "Creating Downloads folder: '$downloadsPath'"
+        New-Item -ItemType Directory -Path $downloadsPath -Force | Out-Null
     }
 
     # Define Utilities with updated names, URLs, definitions, and selection state
     $utilities = @(
          [PSCustomObject]@{
              Name = 'Nvidia Driver (572 Series)'
-             Url = 'https://drive.google.com/uc?export=download&id=1GXLDf-qCn4739dEkBhbt3sVYR6-4y9P9'
-             Definition = 'Nvidia graphics card driver from the 572.xx version series.' # Definition Updated
+             Url = 'https://us.download.nvidia.com/Windows/572.49/572.49-desktop-win10-win11-64bit-international-dch-whql.exe'
+             Definition = 'Nvidia graphics card driver from the 572.xx version series.'
              Selected = $false
          }
          [PSCustomObject]@{
              Name = 'AMD Adrenalin Software Installer'
-             Url = 'https://drivers.amd.com/drivers/installer/24.30/whql/amd-software-adrenalin-edition-25.3.1-minimalsetup-250312_web.exe' # URL Updated
+             Url = 'https://drivers.amd.com/drivers/installer/24.30/whql/amd-software-adrenalin-edition-25.3.1-minimalsetup-250312_web.exe'
              Definition = 'AMD Radeon graphics driver and software suite (Adrenalin Edition Web Setup).'
              Selected = $false
          }
           [PSCustomObject]@{
              Name = 'Auto Clicker (Orphamiel)'
-             Url = 'https://zenlayer.dl.sourceforge.net/project/orphamielautoclicker/autoclicker-3.0/AutoClicker-3.1.exe?viasf=1' # URL Updated
+             Url = 'https://sourceforge.net/projects/orphamielautoclicker/files/latest/download'
              Definition = 'Software that simulates automated mouse clicks.'
              Selected = $false
          }
          [PSCustomObject]@{
              Name = 'Explorer Patcher'
-             Url = 'https://drive.google.com/uc?export=download&id=1rEZlay6CqzEq3zXegWDGz2qYsBSw0Rw2'
-             Definition = 'Reverts Taskbar/Start Menu/Properties features to Windows 10 style.' # Definition Updated
+             Url = 'https://github.com/valinet/ExplorerPatcher/releases/latest/download/ep_setup.exe'
+             Definition = 'Reverts Taskbar/Start Menu/Properties features to Windows 10 style.'
              Selected = $false
          }
          [PSCustomObject]@{
              Name = 'FishStrap (Bloxstrap Fork)'
-             Url = 'https://drive.google.com/uc?export=download&id=1w5uzoz3IJnxFkP3AYVCh6HGWwtoZwJ6o'
-             Definition = 'Bloxstrap fork with enhanced features and support (Roblox related).' # Definition Updated
+             Url = 'https://github.com/pizzaboxer/bloxstrap/releases/latest/download/Bloxstrap-Installer.exe'
+             Definition = 'Bloxstrap fork with enhanced features and support (Roblox related).'
              Selected = $false
          }
          [PSCustomObject]@{
              Name = 'TinyTask Macro Recorder'
-             Url = 'https://github.com/frankwick/t/raw/main/tinytask.exe' # URL Updated
+             Url = 'https://www.tinytask.net/downloads/tinytask.exe'
              Definition = 'Simple macro recorder for recording/playing back mouse & keyboard actions.'
              Selected = $false
          }
           [PSCustomObject]@{
              Name = 'Visual C++ AIO Installer'
-             Url = 'https://drive.google.com/uc?export=download&id=1pvpweweRFEAtvZ29YSC5Ktr2GZf0_7VA'
+             Url = 'https://sg1-dl.techpowerup.com/files/x3VC5zbRkJtwGtCoXwalAQ/1744229814/Visual-C-Runtimes-All-in-One-Mar-2025.zip'
              Definition = 'All-In-One package installer for various MS Visual C++ Redistributables.'
              Selected = $false
          }
          [PSCustomObject]@{
              Name = 'Acer Nitro AN515-45 Drivers'
              Url = 'https://drive.google.com/uc?export=download&id=1BWNQRHOtI22mKSy_z3isS5bu1HMgU_0W'
-             Definition = 'Driver package specifically for Acer Nitro 5 AN515-45 (Ryzen 9 5900HX / RTX 3070).' # Definition Updated
+             Definition = 'Driver package specifically for Acer Nitro 5 AN515-45 (Ryzen 9 5900HX / RTX 3070).'
              Selected = $false
          }
-         # Add more utilities here if needed following the same PSCustomObject format
     )
 
     # --- Interactive Selection Loop ---
@@ -156,7 +136,7 @@ try {
         for($i=0; $i -lt $utilities.Count; $i++){
             $selectionMarker = if($utilities[$i].Selected){ "[X]" } else { "[ ]" }
             Write-Host "$selectionMarker [$($i+1)] $($utilities[$i].Name)" -ForegroundColor White
-            Write-Host "      └─ $($utilities[$i].Definition)" -ForegroundColor Gray
+            Write-Host "      '-- $($utilities[$i].Definition)" -ForegroundColor Gray
         }
         Write-Host "---------------------------------------------------------------------" -ForegroundColor Gray
         Write-Host "Enter number (1-$($utilities.Count)) to toggle selection." -ForegroundColor Yellow
@@ -198,76 +178,99 @@ try {
             # Ensure BITS module is available
             Import-Module BitsTransfer -ErrorAction SilentlyContinue
             if (-not (Get-Command Start-BitsTransfer -ErrorAction SilentlyContinue)) {
-                 Write-Error "BITS Transfer module could not be loaded. Cannot download utilities."
-                 # Consider exiting or alternative download method like Invoke-WebRequest here if critical
+                Write-Host "BITS Transfer module not available. Using Invoke-WebRequest as fallback." -ForegroundColor Yellow
+                
+                foreach ($util in $selectedUtilities) {
+                    $fileName = [System.IO.Path]::GetFileName($util.Url)
+                    if ([string]::IsNullOrEmpty($fileName) -or $fileName -notmatch '\.(exe|zip|msi)$') {
+                        $fileName = "$($util.Name -replace '[^\w\-]', '_').exe"
+                    }
+                    $destinationPath = Join-Path -Path $downloadsPath -ChildPath $fileName
+                    
+                    Write-Host "  Downloading '$($util.Name)' as '$fileName'..."
+                    try {
+                        Invoke-WebRequest -Uri $util.Url -OutFile $destinationPath -UseBasicParsing -ErrorAction Stop
+                        Write-Host "    Download complete for '$($util.Name)'." -ForegroundColor Green
+                    } catch {
+                        Write-Error "    Download FAILED for '$($util.Name)': $($_.Exception.Message)"
+                    }
+                }
             } else {
                 foreach ($util in $selectedUtilities) {
-                    # Destination for BITS should be the target FOLDER. BITS determines filename from headers.
-                    $destinationFolder = $downloadsPath
-                    Write-Host "  Starting download for '$($util.Name)'..."
+                    # Extract filename from URL or use fallback
+                    $fileName = [System.IO.Path]::GetFileName($util.Url)
+                    if ([string]::IsNullOrEmpty($fileName) -or $fileName -notmatch '\.(exe|zip|msi)$') {
+                        $fileName = "$($util.Name -replace '[^\w\-]', '_').exe"
+                    }
+                    $destinationPath = Join-Path -Path $downloadsPath -ChildPath $fileName
+                    
+                    Write-Host "  Starting download for '$($util.Name)' as '$fileName'..."
 
                     try {
-                         # Start the BITS job - it runs in the background by default but we wait here
-                         # For direct exe links or sourceforge, BITS might not get a pretty name, but it will download the file.
-                         $job = Start-BitsTransfer -Source $util.Url -Destination $destinationFolder `
-                                -DisplayName "Downloading $($util.Name)" -Priority Normal `
-                                -Description $util.Definition -ErrorAction Stop
+                        $job = Start-BitsTransfer -Source $util.Url -Destination $destinationPath `
+                               -DisplayName "Downloading $($util.Name)" -Priority Normal `
+                               -Description $util.Definition -ErrorAction Stop -Asynchronous
 
-                         Write-Host "    Transfer Job started (ID: $($job.JobId)). Waiting for completion..." -ForegroundColor Gray
+                        Write-Host "    Transfer Job started (ID: $($job.JobId)). Waiting for completion..." -ForegroundColor Gray
 
-                         # Wait for the job to finish (simple synchronous wait)
-                         while (($job.JobState -eq 'Transferring') -or ($job.JobState -eq 'Connecting') -or ($job.JobState -eq 'Queued')) {
-                             # Optional: Display progress (may not work well if total size isn't reported by server)
-                             # try {
-                             #    if ($job.BytesTotal -gt 0) {
-                             #       $Progress = ($job.BytesTransferred / $job.BytesTotal) * 100
-                             #       Write-Progress -Activity "Downloading $($util.Name)" -Status "$($job.JobState)" -PercentComplete $Progress -ErrorAction SilentlyContinue
-                             #    }
-                             #} catch {}
-                             Start-Sleep -Seconds 2
-                         }
-                         # Ensure progress bar is removed
-                         # Write-Progress -Activity "Downloading $($util.Name)" -Completed
+                        # Wait for the job to finish
+                        do {
+                            $job = Get-BitsTransfer -JobId $job.JobId
+                            if ($job.BytesTotal -gt 0) {
+                                $percentComplete = [math]::Round(($job.BytesTransferred / $job.BytesTotal) * 100)
+                                Write-Progress -Activity "Downloading $($util.Name)" -Status "$($job.JobState) - $percentComplete%" -PercentComplete $percentComplete
+                            }
+                            Start-Sleep -Seconds 1
+                        } while ($job.JobState -eq 'Transferring' -or $job.JobState -eq 'Connecting' -or $job.JobState -eq 'Queued')
+                        
+                        Write-Progress -Activity "Downloading $($util.Name)" -Completed
 
-                         # Check final job state and complete/remove the job
-                         Switch ($job.JobState) {
-                             'Transferred' {
-                                 Complete-BitsTransfer $job
-                                 Write-Host "    Download complete for '$($util.Name)'." -ForegroundColor Green
-                             }
-                             'Error' {
-                                 $errorDetails = $job | Select-Object -ExpandProperty Error
-                                 Write-Error "    BITS download FAILED for '$($util.Name)'. State: $($job.JobState). Error: $($errorDetails.ErrorDescription) ($($errorDetails.ErrorCode))"
-                                 Remove-BitsTransfer $job # Clean up failed job
-                             }
-                             'Cancelled' {
-                                Write-Warning "    BITS download CANCELLED for '$($util.Name)'."
+                        # Check final job state
+                        Switch ($job.JobState) {
+                            'Transferred' {
+                                Complete-BitsTransfer $job
+                                Write-Host "    Download complete for '$($util.Name)'." -ForegroundColor Green
+                            }
+                            'Error' {
+                                $errorDetails = $job | Select-Object -ExpandProperty Error
+                                Write-Error "    BITS download FAILED for '$($util.Name)'. Error: $($errorDetails.ErrorDescription)"
                                 Remove-BitsTransfer $job
-                             }
-                             default {
-                                Write-Warning "    BITS job for '$($util.Name)' ended in unexpected state: '$($job.JobState)'. Check BITS queue or Downloads folder."
-                                # Consider removing job: Remove-BitsTransfer $job
-                             }
-                         }
+                            }
+                            'Cancelled' {
+                               Write-Warning "    BITS download CANCELLED for '$($util.Name)'."
+                               Remove-BitsTransfer $job
+                            }
+                            default {
+                               Write-Warning "    BITS job for '$($util.Name)' ended in unexpected state: '$($job.JobState)'."
+                               Remove-BitsTransfer $job -ErrorAction SilentlyContinue
+                            }
+                        }
                     } catch {
-                         Write-Error "  Failed to start/manage BITS download for '$($util.Name)': $($_.Exception.Message)"
-                         # If a job object was created before the error, try to clean it up
-                         if ($job) { Remove-BitsTransfer $job -ErrorAction SilentlyContinue }
+                        Write-Error "  Failed to download '$($util.Name)': $($_.Exception.Message)"
+                        # If a job was created, clean it up
+                        if ($job) { Remove-BitsTransfer $job -ErrorAction SilentlyContinue }
+                        
+                        # Fallback to Invoke-WebRequest
+                        Write-Host "  Attempting fallback download method..." -ForegroundColor Yellow
+                        try {
+                            Invoke-WebRequest -Uri $util.Url -OutFile $destinationPath -UseBasicParsing -ErrorAction Stop
+                            Write-Host "    Fallback download complete for '$($util.Name)'." -ForegroundColor Green
+                        } catch {
+                            Write-Error "    Fallback download FAILED for '$($util.Name)': $($_.Exception.Message)"
+                        }
                     }
-                    $job = $null # Clear job variable for next iteration
                 } # End foreach utility loop
 
                 Write-Host "`nSelected utility download jobs have been processed." -ForegroundColor Green
                 Write-Host "Please check your '$downloadsPath' folder."
-            } # End else block (BITS module available)
-        } # End else block (items selected)
-    } # End if ($userChoice -eq 'd')
+            }
+        }
+    }
 
 } catch {
      Write-Error "A critical error occurred during the utility download section: $($_.Exception.Message)"
 }
 
 #endregion --- Utility / Driver Download ---
-
 
 Write-Host "`n--- Script Finished ---" -ForegroundColor Cyan
