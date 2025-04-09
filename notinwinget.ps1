@@ -70,7 +70,7 @@ foreach ($index in $selected) {
     if ($index -ge 0 -and $index -lt $software.Count) {
         $item = $software[$index]
         
-        # Get filename from URL [[1]][[5]]
+        # Get filename from URL
         $uri = [System.Uri]$item.Url
         $fileName = [System.IO.Path]::GetFileName($uri.AbsolutePath)
         
@@ -85,7 +85,7 @@ foreach ($index in $selected) {
         try {
             Invoke-WebRequest -Uri $item.Url -OutFile $file -ErrorAction Stop
             
-            # Add Defender exclusions only for successful Explorer Patcher download [[7]]
+            # Add Defender exclusions only for successful Explorer Patcher download
             if ($item.Name -eq '4. Explorer Patcher') {
                 Write-Host "Adding Windows Defender exclusions..."
                 Add-MpPreference -ExclusionPath "C:\Program Files\ExplorerPatcher"
@@ -94,8 +94,20 @@ foreach ($index in $selected) {
                 Add-MpPreference -ExclusionPath "C:\Windows\SystemApps\Microsoft.Windows.StartMenuExperienceHost_cw5n1h2txyewy"
                 Add-MpPreference -ExclusionPath "C:\Windows\SystemApps\ShellExperienceHost_cw5n1h2txyewy"
             }
+
+            # Create Start Menu shortcuts for specific apps
+            if ($item.Name -match 'Auto Clicker|TinyTask') {
+                $startMenuPath = Join-Path $env:APPDATA "Microsoft\Windows\Start Menu\Programs"
+                $shortcutName = ($item.Name -split '\. ', 2)[1] + '.lnk'
+                $shortcutPath = Join-Path $startMenuPath $shortcutName
+
+                $shell = New-Object -ComObject WScript.Shell
+                $shortcut = $shell.CreateShortcut($shortcutPath)
+                $shortcut.TargetPath = $file
+                $shortcut.WorkingDirectory = Split-Path $file
+                $shortcut.IconLocation = "$file,0"
+                $shortcut.Save()
+                Write-Host "✓ Added Start Menu shortcut: $shortcutName" -ForegroundColor Green
+            }
         } catch {
-            Write-Host "Failed: $_" -ForegroundColor Red
-        }
-    }
-}
+            Write
