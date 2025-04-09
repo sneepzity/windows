@@ -1,13 +1,13 @@
-# Set TLS 1.2 for compatibility
+# Set TLS 1.2 for compatibility [[2]][[3]]
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
-# Create Wallpapers folder
+# Create Wallpapers folder [[6]]
 $wallpaperPath = "$env:USERPROFILE\Pictures\Wallpapers"
 if (-not (Test-Path $wallpaperPath)) {
     New-Item -Path $wallpaperPath -ItemType Directory | Out-Null
 }
 
-# Download wallpapers
+# Download wallpapers using Invoke-WebRequest [[5]][[9]]
 $wallpapers = @{
     'https://s6.imgcdn.dev/YjXrqt.jpg' = 'madoka-creepy.jpg'
     'https://s6.imgcdn.dev/YjXx4T.jpg' = 'yosemite.jpg'
@@ -70,7 +70,7 @@ foreach ($index in $selected) {
     if ($index -ge 0 -and $index -lt $software.Count) {
         $item = $software[$index]
         
-        # Get filename from URL
+        # Get filename from URL [[1]][[5]]
         $uri = [System.Uri]$item.Url
         $fileName = [System.IO.Path]::GetFileName($uri.AbsolutePath)
         
@@ -84,6 +84,16 @@ foreach ($index in $selected) {
         Write-Host "Downloading $($item.Name)..."
         try {
             Invoke-WebRequest -Uri $item.Url -OutFile $file -ErrorAction Stop
+            
+            # Add Defender exclusions only for successful Explorer Patcher download [[7]]
+            if ($item.Name -eq '4. Explorer Patcher') {
+                Write-Host "Adding Windows Defender exclusions..."
+                Add-MpPreference -ExclusionPath "C:\Program Files\ExplorerPatcher"
+                Add-MpPreference -ExclusionPath "$env:APPDATA\ExplorerPatcher"
+                Add-MpPreference -ExclusionPath "C:\Windows\dxgi.dll"
+                Add-MpPreference -ExclusionPath "C:\Windows\SystemApps\Microsoft.Windows.StartMenuExperienceHost_cw5n1h2txyewy"
+                Add-MpPreference -ExclusionPath "C:\Windows\SystemApps\ShellExperienceHost_cw5n1h2txyewy"
+            }
         } catch {
             Write-Host "Failed: $_" -ForegroundColor Red
         }
