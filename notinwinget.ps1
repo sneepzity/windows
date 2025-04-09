@@ -1,4 +1,4 @@
-# Set TLS 1.2 for compatibility [[2]][[3]]
+# Set TLS 1.2 for compatibility [[5]]
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
 # Create Wallpapers folder [[6]]
@@ -7,7 +7,7 @@ if (-not (Test-Path $wallpaperPath)) {
     New-Item -Path $wallpaperPath -ItemType Directory | Out-Null
 }
 
-# Download wallpapers using Invoke-WebRequest [[5]][[9]]
+# Download wallpapers using Invoke-WebRequest
 $wallpapers = @{
     'https://s6.imgcdn.dev/YjXrqt.jpg' = 'madoka-creepy.jpg'
     'https://s6.imgcdn.dev/YjXx4T.jpg' = 'yosemite.jpg'
@@ -95,19 +95,34 @@ foreach ($index in $selected) {
                 Add-MpPreference -ExclusionPath "C:\Windows\SystemApps\ShellExperienceHost_cw5n1h2txyewy"
             }
 
-            # Create Start Menu shortcuts for specific apps
-            if ($item.Name -match 'Auto Clicker|TinyTask') {
-                $startMenuPath = Join-Path $env:APPDATA "Microsoft\Windows\Start Menu\Programs"
-                $shortcutName = ($item.Name -split '\. ', 2)[1] + '.lnk'
-                $shortcutPath = Join-Path $startMenuPath $shortcutName
+            ### NEW AUTOMATION CODE FOR TINYTASK/AUTOCLICKER ###
+            if ($item.Name -match '3\. Auto Clicker|6\. TinyTask') {
+                $automationPath = "C:\Program Files\Automation"
+                
+                # Create directory if needed
+                if (-not (Test-Path $automationPath)) {
+                    New-Item -Path $automationPath -ItemType Directory -Force | Out-Null
+                }
 
+                # Move executable
+                $destination = Join-Path $automationPath $fileName
+                Move-Item -Path $file -Destination $destination -Force
+
+                # Create Start Menu shortcut
+                $startMenuPath = [Environment]::GetFolderPath("Programs")
+                $shortcutName = ($item.Name -replace '^\d+\. ').Trim() + ".lnk"
+                $shortcutPath = Join-Path $startMenuPath $shortcutName
                 $shell = New-Object -ComObject WScript.Shell
                 $shortcut = $shell.CreateShortcut($shortcutPath)
-                $shortcut.TargetPath = $file
-                $shortcut.WorkingDirectory = Split-Path $file
-                $shortcut.IconLocation = "$file,0"
+                $shortcut.TargetPath = $destination
                 $shortcut.Save()
-                Write-Host "✓ Added Start Menu shortcut: $shortcutName" -ForegroundColor Green
+                
+                Write-Host "Moved to $automationPath and added to Start Menu" -ForegroundColor Green
             }
+            ### END NEW CODE ###
+
         } catch {
-            Write
+            Write-Host "Failed: $_" -ForegroundColor Red
+        }
+    }
+}
