@@ -74,7 +74,7 @@ $apps = @(
     [PSCustomObject]@{Name="YouTube Music (th-ch)"; ID="th-ch.YouTubeMusic"; Source="winget"; Description="Desktop client for YouTube Music."}
     [PSCustomObject]@{Name="AutoHotkey"; ID="AutoHotkey.AutoHotkey"; Description="Scripting language for task automation and creating hotkeys."}
     [PSCustomObject]@{Name="Playnite Game Launcher"; ID="Playnite.Playnite"; Description="Open-source launcher for managing multiple game libraries."}
-    [PSCustomObject]@{Name="Vesktop (Discord Client)"; ID="Vesktop.Vesktop"; Description="Alternative Discord desktop client focused on performance/features."}
+    [PSCustomObject]@{Name="Vesktop (Discord Client)"; ID="Vencord.Vesktop"; Description="Alternative Discord desktop client focused on performance/features."}
     [PSCustomObject]@{Name="Dual Monitor Tools"; ID="DualMonitorTools.DualMonitorTools"; Description="Utilities for managing multiple monitors (hotkeys, wallpaper, etc.)."}
     [PSCustomObject]@{Name="Microsoft PowerToys"; ID="Microsoft.PowerToys"; Description="Set of utilities for power users to tune Windows experience."}
     [PSCustomObject]@{Name="Rainmeter Desktop Customization"; ID="Rainmeter.Rainmeter"; Description="Tool for displaying customizable skins/widgets on the desktop."}
