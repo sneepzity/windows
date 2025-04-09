@@ -4,21 +4,21 @@ for windows setup with my preferred
 2. drivers
 3. wallpapers
 
-usage: 
-
-installapps.ps1:
-
-```irm https://raw.githubusercontent.com/sneepzity/windows/refs/heads/main/installapps.ps1 | iex```
-
-notinwinget.ps1:
-
-```irm https://raw.githubusercontent.com/sneepzity/windows/refs/heads/main/notinwinget.ps1 | iex```
+usage: (in preferrable/best order)
 
 
-preliminary.ps1:
+preliminary.ps1: (first)
 
 ```irm https://raw.githubusercontent.com/sneepzity/windows/refs/heads/main/preliminary.ps1 | iex```
 
-chocolatey.ps1:
+installapps.ps1: (second)
+
+```irm https://raw.githubusercontent.com/sneepzity/windows/refs/heads/main/installapps.ps1 | iex```
+
+notinwinget.ps1: (third)
+
+```irm https://raw.githubusercontent.com/sneepzity/windows/refs/heads/main/notinwinget.ps1 | iex```
+
+chocolatey.ps1: (fourth)
 
 ```irm https://raw.githubusercontent.com/sneepzity/windows/refs/heads/main/chocolatey.ps1 | iex```
