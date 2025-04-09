@@ -67,7 +67,7 @@ $apps = @(
     [PSCustomObject]@{Name="Vesktop (Discord Client)"; ID="Vencord.Vesktop"; Description="Alternative Discord desktop client focused on performance/features."}
     [PSCustomObject]@{Name="Microsoft PowerToys"; ID="Microsoft.PowerToys"; Description="Set of utilities for power users to tune Windows experience."}
     [PSCustomObject]@{Name="Rainmeter Desktop Customization"; ID="Rainmeter.Rainmeter"; Description="Tool for displaying customizable skins/widgets on the desktop."}
-    [PSCustomObject]@{Name="Patch My PC Home Updater"; ID="PatchMyPC.PatchMyPC"; Description="Utility to check for and install updates for many third-party applications."}
+    [PSCustomObject]@{Name="UniGetUI"; ID="MartiCliment.UniGetUI"; Description="User-friendly package manager GUI for Windows."}
     [PSCustomObject]@{Name="Windows Terminal"; ID="Microsoft.WindowsTerminal"; Description="Modern terminal application from Microsoft with tabs and customization."}
 )
 
