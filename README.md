@@ -10,6 +10,6 @@ installapps.ps1:
 
 ```irm https://raw.githubusercontent.com/sneepzity/windows/refs/heads/main/installapps.ps1 | iex```
 
-notinwiget.ps1:
+notinwinget.ps1:
 
 ```irm https://raw.githubusercontent.com/sneepzity/windows/refs/heads/main/notinwinget.ps1 | iex```
