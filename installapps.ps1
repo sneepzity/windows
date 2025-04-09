@@ -219,12 +219,11 @@ try {
                 
                 # Verify installation by checking if the app is now in the list of installed apps
                 $verifyResult = & winget list --id $id --exact
-                
-                if ($verifyResult -match [regex]::Escape($id))
-                    Write-Host "Verified: $name is now installed." -ForegroundColor Green
-                } else {
-                    Write-Host "Warning: $name installation reported success but verification failed. It might need system restart to complete." -ForegroundColor Yellow
-                }
+if ($verifyResult -match [regex]::Escape($id)) {
+    Write-Host "Verified: $name is now installed." -ForegroundColor Green
+} else {
+    Write-Host "Warning: Verification failed..." -ForegroundColor Yellow
+}
             } else {
                 $ErrorOccurred = $true # Mark that at least one error happened
                 # Provide feedback based on common winget error codes
