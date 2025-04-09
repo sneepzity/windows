@@ -18,3 +18,7 @@ notinwinget.ps1:
 preliminary.ps1:
 
 ```irm https://raw.githubusercontent.com/sneepzity/windows/refs/heads/main/preliminary.ps1 | iex```
+
+chocolatey.ps1:
+
+```irm https://raw.githubusercontent.com/sneepzity/windows/refs/heads/main/chocolatey.ps1 | iex```
