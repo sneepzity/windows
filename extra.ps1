@@ -32,10 +32,10 @@ $fontGroups = @{
     "4" = @{
         Name = "SF Pro"
         Fonts = @(
-            @{ Name = "SF Pro"; URL = "https://github.com/sahibjotsaggu/San-Francisco-Pro-Fonts/raw/refs/heads/master/SF-Pro.ttf" },
-            @{ Name = "SF Pro Text"; URL = "https://github.com/sahibjotsaggu/San-Francisco-Pro-Fonts/raw/refs/heads/master/SF-Pro-Text-Regular.otf" },
-            @{ Name = "SF Pro Rounded"; URL = "https://github.com/sahibjotsaggu/San-Francisco-Pro-Fonts/raw/refs/heads/master/SF-Pro-Rounded-Regular.otf" },
-            @{ Name = "SF Pro Display"; URL = "https://github.com/sahibjotsaggu/San-Francisco-Pro-Fonts/raw/refs/heads/master/SF-Pro-Display-Regular.otf" }
+            @{ Name = "SF Pro"; Folder = "SF Pro"; URL = "https://github.com/sahibjotsaggu/San-Francisco-Pro-Fonts/raw/refs/heads/master/SF-Pro.ttf" },
+            @{ Name = "SF Pro Text"; Folder = "SF Pro"; URL = "https://github.com/sahibjotsaggu/San-Francisco-Pro-Fonts/raw/refs/heads/master/SF-Pro-Text-Regular.otf" },
+            @{ Name = "SF Pro Rounded"; Folder = "SF Pro"; URL = "https://github.com/sahibjotsaggu/San-Francisco-Pro-Fonts/raw/refs/heads/master/SF-Pro-Rounded-Regular.otf" },
+            @{ Name = "SF Pro Display"; Folder = "SF Pro"; URL = "https://github.com/sahibjotsaggu/San-Francisco-Pro-Fonts/raw/refs/heads/master/SF-Pro-Display-Regular.otf" }
         )
     }
 }
@@ -150,7 +150,10 @@ function Show-FontMenu {
             foreach ($font in $selectedFonts) {
                 try {
                     $fontUrl = $font.URL
-                    $fontSubDir = Join-Path -Path $fontBaseDir -ChildPath $font.Name
+                    # Use group folder for SF Pro [[4]][[8]]
+                    $fontSubDir = Join-Path -Path $fontBaseDir -ChildPath (
+                        if ($font.Folder) { $font.Folder } else { $font.Name }
+                    )
                     
                     # Create font-specific directory
                     if (-not (Test-Path $fontSubDir)) {
