@@ -4,6 +4,11 @@ for windows setup with my preferred
 2. drivers
 3. wallpapers
 
+Steps
+1. Open Powershell in Adminstrator
+2. Ensure you have an internet connection
+3. Select a script - recommended to follow the order below
+
 usage: (in preferrable/best order)
 
 
