@@ -32,13 +32,23 @@ if (-not (Get-Command choco -ErrorAction SilentlyContinue)) {
 
 # Install requested packages
 Write-Host "Installing applications..."
-choco install neovim aria2 git -y --force
+choco install neovim aria2 git python nodejs -y --force  # Added python and nodejs [[3]][[5]]
 
-# Verify Git installation [[7]][[10]]
-$gitPath = Join-Path $env:ProgramFiles "Git\bin\git.exe"
-if (-not (Test-Path $gitPath)) {
-    Write-Host "Git installation failed. Exiting..." -ForegroundColor Red
-    exit 1
+# Verify installations [[1]][[7]]
+$requiredPackages = @(
+    @{ Name = "Neovim";    Executable = "nvim.exe" },
+    @{ Name = "Aria2";     Executable = "aria2c.exe" },
+    @{ Name = "Git";       Executable = "git.exe" },
+    @{ Name = "Python";    Executable = "python.exe" },
+    @{ Name = "Node.js";   Executable = "node.exe" }
+)
+
+foreach ($pkg in $requiredPackages) {
+    $exe = $pkg.Executable
+    if (-not (Get-Command $exe -ErrorAction SilentlyContinue)) {
+        Write-Host "$($pkg.Name) installation failed. Exiting..." -ForegroundColor Red
+        exit 1
+    }
 }
 
 # Force environment refresh [[6]]
@@ -53,6 +63,6 @@ if (-not (Test-Path $nvimPath)) {
 }
 
 Write-Host "Cloning LazyVim configuration..."
-& $gitPath clone https://github.com/LazyVim/starter $nvimPath --depth 1  # Use explicit path [[5]][[9]]
+git clone https://github.com/LazyVim/starter $nvimPath --depth 1  # Use explicit path [[5]][[9]]
 
 Write-Host "Installation complete. Use 'choco list --local-only' to verify."
