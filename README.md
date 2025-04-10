@@ -5,9 +5,10 @@ for windows setup with my preferred
 3. wallpapers
 
 Steps
-1. Open Powershell in Adminstrator
-2. Ensure you have an internet connection
-3. Select a script - recommended to follow the order below
+1. Search for Powershell by clicking on Search or pressing the windows key and putting in powershell and find the option to open in administrator (will prompt you for confirmation, press confirm/yes)
+2. Open Powershell in Adminstrator
+3. Ensure you have an internet connection
+4. Select a script - recommended to follow the order below
 
 usage: (in preferrable/best order)
 
