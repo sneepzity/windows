@@ -1,5 +1,7 @@
 # Font Installer Script with DisplayLink Driver Installation
 # Created: 2025-04-10
+$ErrorActionPreference = "Stop"  # Show all errors [[6]]
+$host.UI.RawUI.WindowTitle = "Font Installer - Keep this window open"  # Identify window [[7]]
 
 # Configuration
 $fontGroups = @{
@@ -39,7 +41,6 @@ $fontGroups = @{
         )
     }
 }
-
 $fontBaseDir = [System.IO.Path]::Combine([Environment]::GetFolderPath("MyDocuments"), "Fonts")
 $displayLinkUrl = "https://www.synaptics.com/sites/default/files/exe_files/2025-03/DisplayLink%20USB%20Graphics%20Software%20for%20Windows11.6%20M1-EXE.exe"
 $displayLinkInstaller = "$env:TEMP\DisplayLinkInstaller.exe"
@@ -60,6 +61,8 @@ if (-not (Test-Path $fontBaseDir)) {
     }
     catch {
         Write-Host "Failed to create directory: $fontBaseDir" -ForegroundColor Red
+        Write-Host "Press any key to exit..." -ForegroundColor Yellow
+        $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")  # Pause before exit [[3]][[8]]
         exit 1
     }
 }
@@ -104,35 +107,27 @@ function Show-FontMenu {
 :mainLoop while ($true) {
     Show-MainMenu
     $input = Read-Host "Enter selection (e.g. 1,2,3,4,5) or 'exit'"
-    
     if ($input -eq 'exit') {
         Write-Host "Exiting script..." -ForegroundColor Yellow
         break mainLoop
     }
-    
     $selections = $input -split ',' | ForEach-Object { $_.Trim() }
-    
     foreach ($selection in $selections) {
         if ($selection -eq '5') {
             $installDisplayLink = $true
             break mainLoop
         }
-        
         if (-not $fontGroups.ContainsKey($selection)) {
             Write-Warning "Invalid selection: $selection"
             continue
         }
-        
         $group = $fontGroups[$selection]
-        
         :fontLoop while ($true) {
             Show-FontMenu -Group $group
             $fontChoice = Read-Host "Enter font numbers (e.g. 1,3), 'all', or 'b'"
-            
             if ($fontChoice -eq 'b') {
                 break fontLoop
             }
-            
             if ($fontChoice -eq 'all') {
                 $selectedFonts = $group.Fonts
             } else {
@@ -146,7 +141,6 @@ function Show-FontMenu {
                     }
                 }
             }
-            
             foreach ($font in $selectedFonts) {
                 try {
                     $fontUrl = $font.URL
@@ -154,37 +148,30 @@ function Show-FontMenu {
                     $fontSubDir = Join-Path -Path $fontBaseDir -ChildPath (
                         if ($font.Folder) { $font.Folder } else { $font.Name }
                     )
-                    
                     # Create font-specific directory
                     if (-not (Test-Path $fontSubDir)) {
                         New-Item -ItemType Directory -Path $fontSubDir -Force | Out-Null
                     }
-                    
                     if ($fontUrl.EndsWith(".zip", [System.StringComparison]::OrdinalIgnoreCase)) {
                         # Handle ZIP archives [[1]][[4]]
                         $zipPath = "$env:TEMP\$($font.Name).zip"
-                        
                         # Download and extract ZIP
                         Write-Host "  Downloading $($font.Name)..." -NoNewline
                         Invoke-WebRequest -Uri $fontUrl -OutFile $zipPath -ErrorAction Stop
                         Write-Host " Done" -ForegroundColor Green
-                        
                         Write-Host "  Extracting to $fontSubDir..." -NoNewline
                         Expand-Archive -Path $zipPath -DestinationPath $fontSubDir -Force -ErrorAction Stop
                         Write-Host " Done" -ForegroundColor Green
-                        
                         # Cleanup
                         Remove-Item -Path $zipPath -Force -ErrorAction SilentlyContinue
                     } else {
                         # Handle individual font files [[1]][[8]]
                         $fileName = [System.IO.Path]::GetFileName($fontUrl)
                         $fontPath = Join-Path -Path $fontSubDir -ChildPath $fileName
-                        
                         Write-Host "  Downloading $($font.Name)..." -NoNewline
                         Invoke-WebRequest -Uri $fontUrl -OutFile $fontPath -ErrorAction Stop
                         Write-Host " Done" -ForegroundColor Green
                     }
-                    
                     # Install fonts system-wide [[1]][[3]]
                     Write-Host "  Installing fonts..." -NoNewline
                     $fontFiles = Get-ChildItem -Path $fontSubDir -Include *.ttf, *.otf -Recurse
@@ -210,7 +197,6 @@ if ($installDisplayLink) {
         try {
             # Download installer
             Invoke-WebRequest -Uri $displayLinkUrl -OutFile $displayLinkInstaller -ErrorAction Stop
-            
             # Silent install
             $process = Start-Process -FilePath $displayLinkInstaller -ArgumentList "/quiet /norestart" -Wait -PassThru
             if ($process.ExitCode -eq 0) {
@@ -218,13 +204,16 @@ if ($installDisplayLink) {
             }
             else {
                 Write-Host "DisplayLink installation failed with code $($process.ExitCode)" -ForegroundColor Red
+                Write-Host "Press any key to exit..." -ForegroundColor Yellow
+                $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")  # Pause on failure [[9]]
             }
-            
             # Cleanup
             Remove-Item -Path $displayLinkInstaller -Force -ErrorAction SilentlyContinue
         }
         catch {
             Write-Host "DisplayLink installation failed: $_" -ForegroundColor Red
+            Write-Host "Press any key to exit..." -ForegroundColor Yellow
+            $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")  # Pause on exception [[9]]
         }
     } else {
         Write-Host "Skipping DisplayLink installation" -ForegroundColor Yellow
@@ -232,3 +221,5 @@ if ($installDisplayLink) {
 }
 
 Write-Host "`nOperation complete" -ForegroundColor Cyan
+Write-Host "Press Enter to exit..." -ForegroundColor Yellow
+Read-Host  # Final pause to keep window open [[2]][[5]]
