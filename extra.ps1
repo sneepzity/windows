@@ -45,11 +45,11 @@ $displayLinkUrl = "https://www.synaptics.com/sites/default/files/exe_files/2025-
 $displayLinkInstaller = "$env:TEMP\DisplayLinkInstaller.exe"
 $installDisplayLink = $false
 
-# Admin elevation check [[3]][[7]]
+# Admin elevation check with window persistence [[1]][[7]]
 if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")) {
-    Write-Host "Requesting admin rights for font installation..." -ForegroundColor Yellow
-    Start-Process powershell "-NoProfile -ExecutionPolicy Bypass -File `"$PSCommandPath`"" -Verb RunAs
-    exit
+    Write-Host "Requesting admin rights..." -ForegroundColor Yellow
+    Start-Process powershell "-NoExit -NoProfile -ExecutionPolicy Bypass -File `"$PSCommandPath`"" -Verb RunAs
+    exit  # Close original non-elevated instance [[4]][[7]]
 }
 
 # Create base font directory if needed
