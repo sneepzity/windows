@@ -9,7 +9,7 @@ Steps
 2. Open Powershell in Adminstrator
 3. Ensure you have an internet connection
 4. Select a script - recommended to follow the order below
-5. Paste it into the powershell window that you opened earlier
+5. Paste it into the powershell window that you opened earlier (THE SCRIPT WILL NOT WORK, IT WILL JUST CLOSE **IF** YOU ARE USING A NON-ADMINISTRATOR/NON-PRIVILEGED POWERSHELL SESSION)
 
 usage: (in preferrable/best order)
 
