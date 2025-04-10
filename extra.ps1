@@ -29,6 +29,15 @@ $fontGroups = @{
             @{ Name = "Noto"; URL = "https://github.com/ryanoasis/nerd-fonts/releases/download/v3.3.0/Noto.zip" }
         )
     }
+    "4" = @{
+        Name = "SF Pro"
+        Fonts = @(
+            @{ Name = "SF Pro"; URL = "https://github.com/sahibjotsaggu/San-Francisco-Pro-Fonts/raw/refs/heads/master/SF-Pro.ttf" },
+            @{ Name = "SF Pro Text"; URL = "https://github.com/sahibjotsaggu/San-Francisco-Pro-Fonts/raw/refs/heads/master/SF-Pro-Text-Regular.otf" },
+            @{ Name = "SF Pro Rounded"; URL = "https://github.com/sahibjotsaggu/San-Francisco-Pro-Fonts/raw/refs/heads/master/SF-Pro-Rounded-Regular.otf" },
+            @{ Name = "SF Pro Display"; URL = "https://github.com/sahibjotsaggu/San-Francisco-Pro-Fonts/raw/refs/heads/master/SF-Pro-Display-Regular.otf" }
+        )
+    }
 }
 
 $fontBaseDir = [System.IO.Path]::Combine([Environment]::GetFolderPath("MyDocuments"), "Fonts")
@@ -79,7 +88,7 @@ function Show-MainMenu {
     foreach ($group in $fontGroups.GetEnumerator() | Sort-Object Key) {
         Write-Host "[$($group.Key)] $($group.Value.Name)" -ForegroundColor Yellow
     }
-    Write-Host "[4] Install DisplayLink Driver" -ForegroundColor Yellow
+    Write-Host "[5] Install DisplayLink Driver" -ForegroundColor Yellow  # Updated option number [[6]]
 }
 
 function Show-FontMenu {
@@ -94,7 +103,7 @@ function Show-FontMenu {
 # Main execution
 :mainLoop while ($true) {
     Show-MainMenu
-    $input = Read-Host "Enter selection (e.g. 1,2,3,4) or 'exit'"
+    $input = Read-Host "Enter selection (e.g. 1,2,3,4,5) or 'exit'"
     
     if ($input -eq 'exit') {
         Write-Host "Exiting script..." -ForegroundColor Yellow
@@ -104,9 +113,9 @@ function Show-FontMenu {
     $selections = $input -split ',' | ForEach-Object { $_.Trim() }
     
     foreach ($selection in $selections) {
-        if ($selection -eq '4') {
+        if ($selection -eq '5') {  # Updated DisplayLink option [[6]]
             $installDisplayLink = $true
-            break mainLoop  # Immediate exit to process DisplayLink [[2]][[4]]
+            break mainLoop
         }
         
         if (-not $fontGroups.ContainsKey($selection)) {
