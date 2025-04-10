@@ -46,11 +46,17 @@ $displayLinkUrl = "https://www.synaptics.com/sites/default/files/exe_files/2025-
 $displayLinkInstaller = "$env:TEMP\DisplayLinkInstaller.exe"
 $installDisplayLink = $false
 
-# Admin elevation check with window persistence [[1]][[7]]
+# Enhanced elevation check with modern shell detection [[1]][[3]][[7]]
 if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")) {
     Write-Host "Requesting admin rights..." -ForegroundColor Yellow
-    Start-Process powershell "-NoExit -NoProfile -ExecutionPolicy Bypass -File `"$PSCommandPath`"" -Verb RunAs
-    exit  # Close original non-elevated instance [[4]][[7]]
+    
+    # Detect preferred shell [[2]][[5]]
+    $powershellCmd = if (Get-Command pwsh -ErrorAction SilentlyContinue) { "pwsh" } else { "powershell" }
+    $terminalCmd = if (Get-Command wt.exe -ErrorAction SilentlyContinue) { "wt.exe" } else { $powershellCmd }
+
+    # Relaunch with window persistence [[7]]
+    Start-Process $terminalCmd "-NoExit -ExecutionPolicy Bypass -NoProfile -File `"$PSCommandPath`"" -Verb RunAs
+    exit  # Close original non-elevated instance [[4]]
 }
 
 # Create base font directory if needed
@@ -62,7 +68,7 @@ if (-not (Test-Path $fontBaseDir)) {
     catch {
         Write-Host "Failed to create directory: $fontBaseDir" -ForegroundColor Red
         Write-Host "Press any key to exit..." -ForegroundColor Yellow
-        $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")  # Pause before exit [[3]][[8]]
+        $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
         exit 1
     }
 }
@@ -220,6 +226,7 @@ if ($installDisplayLink) {
     }
 }
 
+# Final user prompt to keep window open [[3]][[5]][[8]]
 Write-Host "`nOperation complete" -ForegroundColor Cyan
 Write-Host "Press Enter to exit..." -ForegroundColor Yellow
-Read-Host  # Final pause to keep window open [[2]][[5]]
+Read-Host
