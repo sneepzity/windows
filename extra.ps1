@@ -88,7 +88,7 @@ function Show-MainMenu {
     foreach ($group in $fontGroups.GetEnumerator() | Sort-Object Key) {
         Write-Host "[$($group.Key)] $($group.Value.Name)" -ForegroundColor Yellow
     }
-    Write-Host "[5] Install DisplayLink Driver" -ForegroundColor Yellow  # Updated option number [[6]]
+    Write-Host "[5] Install DisplayLink Driver" -ForegroundColor Yellow
 }
 
 function Show-FontMenu {
@@ -113,7 +113,7 @@ function Show-FontMenu {
     $selections = $input -split ',' | ForEach-Object { $_.Trim() }
     
     foreach ($selection in $selections) {
-        if ($selection -eq '5') {  # Updated DisplayLink option [[6]]
+        if ($selection -eq '5') {
             $installDisplayLink = $true
             break mainLoop
         }
@@ -149,7 +149,7 @@ function Show-FontMenu {
             
             foreach ($font in $selectedFonts) {
                 try {
-                    $zipPath = "$env:TEMP\$($font.Name).zip"
+                    $fontUrl = $font.URL
                     $fontSubDir = Join-Path -Path $fontBaseDir -ChildPath $font.Name
                     
                     # Create font-specific directory
@@ -157,15 +157,30 @@ function Show-FontMenu {
                         New-Item -ItemType Directory -Path $fontSubDir -Force | Out-Null
                     }
                     
-                    # Download font
-                    Write-Host "  Downloading $($font.Name)..." -NoNewline
-                    Invoke-WebRequest -Uri $font.URL -OutFile $zipPath -ErrorAction Stop
-                    Write-Host " Done" -ForegroundColor Green
-                    
-                    # Extract to subdirectory
-                    Write-Host "  Extracting to $fontSubDir..." -NoNewline
-                    Expand-Archive -Path $zipPath -DestinationPath $fontSubDir -Force -ErrorAction Stop
-                    Write-Host " Done" -ForegroundColor Green
+                    if ($fontUrl.EndsWith(".zip", [System.StringComparison]::OrdinalIgnoreCase)) {
+                        # Handle ZIP archives [[1]][[4]]
+                        $zipPath = "$env:TEMP\$($font.Name).zip"
+                        
+                        # Download and extract ZIP
+                        Write-Host "  Downloading $($font.Name)..." -NoNewline
+                        Invoke-WebRequest -Uri $fontUrl -OutFile $zipPath -ErrorAction Stop
+                        Write-Host " Done" -ForegroundColor Green
+                        
+                        Write-Host "  Extracting to $fontSubDir..." -NoNewline
+                        Expand-Archive -Path $zipPath -DestinationPath $fontSubDir -Force -ErrorAction Stop
+                        Write-Host " Done" -ForegroundColor Green
+                        
+                        # Cleanup
+                        Remove-Item -Path $zipPath -Force -ErrorAction SilentlyContinue
+                    } else {
+                        # Handle individual font files [[1]][[8]]
+                        $fileName = [System.IO.Path]::GetFileName($fontUrl)
+                        $fontPath = Join-Path -Path $fontSubDir -ChildPath $fileName
+                        
+                        Write-Host "  Downloading $($font.Name)..." -NoNewline
+                        Invoke-WebRequest -Uri $fontUrl -OutFile $fontPath -ErrorAction Stop
+                        Write-Host " Done" -ForegroundColor Green
+                    }
                     
                     # Install fonts system-wide [[1]][[3]]
                     Write-Host "  Installing fonts..." -NoNewline
@@ -174,9 +189,6 @@ function Show-FontMenu {
                         Install-Font -FontPath $file.FullName | Out-Null
                     }
                     Write-Host " Done" -ForegroundColor Green
-                    
-                    # Cleanup
-                    Remove-Item -Path $zipPath -Force -ErrorAction SilentlyContinue
                 }
                 catch {
                     Write-Host " Failed" -ForegroundColor Red
