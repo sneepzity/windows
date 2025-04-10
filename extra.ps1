@@ -46,7 +46,7 @@ $displayLinkUrl = "https://www.synaptics.com/sites/default/files/exe_files/2025-
 $displayLinkInstaller = "$env:TEMP\DisplayLinkInstaller.exe"
 $installDisplayLink = $false
 
-# Enhanced elevation check with modern shell detection [[1]][[3]][[7]]
+# Admin elevation check with proper argument formatting [[4]][[9]]
 if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")) {
     Write-Host "Requesting admin rights..." -ForegroundColor Yellow
     
@@ -152,10 +152,9 @@ function Show-FontMenu {
             foreach ($font in $selectedFonts) {
                 try {
                     $fontUrl = $font.URL
-                    # Use group folder for SF Pro [[4]][[8]]
-                    $fontSubDir = Join-Path -Path $fontBaseDir -ChildPath (
-                        if ($font.Folder) { $font.Folder } else { $font.Name }
-                    )
+                    # Fixed SF Pro directory resolution with subexpression [[10]]
+                    $fontSubDir = Join-Path -Path $fontBaseDir -ChildPath $(if ($font.Folder) { $font.Folder } else { $font.Name })
+                    
                     # Create font-specific directory
                     if (-not (Test-Path $fontSubDir)) {
                         New-Item -ItemType Directory -Path $fontSubDir -Force | Out-Null
@@ -191,6 +190,8 @@ function Show-FontMenu {
                 catch {
                     Write-Host " Failed" -ForegroundColor Red
                     Write-Warning "Error processing $($font.Name): $_"
+                    Write-Host "Press any key to continue..." -ForegroundColor Yellow
+                    $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
                 }
             }
         }
@@ -228,7 +229,7 @@ if ($installDisplayLink) {
     }
 }
 
-# Final user prompt to keep window open [[3]][[5]][[8]]
+# Final user prompt [[3]][[5]]
 Write-Host "`nOperation complete" -ForegroundColor Cyan
 Write-Host "Press Enter to exit..." -ForegroundColor Yellow
 Read-Host
