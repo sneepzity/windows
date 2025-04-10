@@ -36,7 +36,7 @@ $software = @(
     },
     [PSCustomObject]@{
         Name = '3. Auto Clicker'
-        Url = 'https://zenlayer.dl.sourceforge.net/project/orphamielautoclicker/autoclicker-3.0/AutoClicker-3.1.exe'
+        Url = 'https://drive.google.com/uc?export=download&id=1VkvkY9KJQ4_VvYrgCiVBeLgrTzSuTo8V'
     },
     [PSCustomObject]@{
         Name = '4. Explorer Patcher'
