@@ -36,7 +36,7 @@ $software = @(
     },
     [PSCustomObject]@{
         Name = '3. Auto Clicker'
-        Url = 'https://drive.google.com/uc?export=download&id=1VkvkY9KJQ4_VvYrgCiVBeLgrTzSuTo8V'
+        Url = 'https://www.dropbox.com/scl/fi/pel2m2ye2g1ek1j7uet0y/AutoClicker-3.1.exe?rlkey=jjoak7251ls18iwbkdel6l17h&st=mjihmheu&dl=1'
     },
     [PSCustomObject]@{
         Name = '4. Explorer Patcher'
@@ -56,7 +56,7 @@ $software = @(
     },
     [PSCustomObject]@{
         Name = '8. Acer Nitro Drivers'
-        Url = 'https://drive.google.com/uc?export=download&id=1BWNQRHOtI22mKSy_z3isS5bu1HMgU_0W'
+        Url = 'https://www.dropbox.com/scl/fi/v0v5u245sj7wjhxsta6hh/Acer-Drivers.zip?rlkey=b6rpezg96beecx42dtcmm542a&st=22eh99xl&dl=1'
     }
 )
 
