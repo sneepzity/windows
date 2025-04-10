@@ -50,12 +50,14 @@ $installDisplayLink = $false
 if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")) {
     Write-Host "Requesting admin rights..." -ForegroundColor Yellow
     
-    # Detect preferred shell [[2]][[5]]
-    $powershellCmd = if (Get-Command pwsh -ErrorAction SilentlyContinue) { "pwsh" } else { "powershell" }
-    $terminalCmd = if (Get-Command wt.exe -ErrorAction SilentlyContinue) { "wt.exe" } else { $powershellCmd }
-
-    # Relaunch with window persistence [[7]]
-    Start-Process $terminalCmd "-NoExit -ExecutionPolicy Bypass -NoProfile -File `"$PSCommandPath`"" -Verb RunAs
+    # Split arguments into array elements [[9]]
+    Start-Process powershell -ArgumentList @(
+        "-NoExit",
+        "-NoProfile",
+        "-ExecutionPolicy", "Bypass",
+        "-File", "`"$PSCommandPath`""
+    ) -Verb RunAs
+    
     exit  # Close original non-elevated instance [[4]]
 }
 
