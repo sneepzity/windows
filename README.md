@@ -22,3 +22,7 @@ notinwinget.ps1: (third)
 chocolatey.ps1: (fourth)
 
 ```irm https://raw.githubusercontent.com/sneepzity/windows/refs/heads/main/chocolatey.ps1 | iex```
+
+extra.ps1 (optional)
+
+```irm https://raw.githubusercontent.com/sneepzity/windows/refs/heads/main/extra.ps1 | iex```
