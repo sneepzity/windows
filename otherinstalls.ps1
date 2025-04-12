@@ -53,6 +53,35 @@ try {
     Write-Host "Failed to apply registry tweak: $_" -ForegroundColor Red
 }
 
+# Download and handle performance.reg files
+Write-Host "Downloading and applying performance tweaks..." -ForegroundColor Cyan
+$performanceRegUrl = 'https://www.dropbox.com/scl/fi/k56j578r87egwpk4oh4hp/performance.reg?rlkey=9ag20yi2uo6e5o2bqx4if0ko8&st=17yoy9eo&dl=1'
+$removePerformanceRegUrl = 'https://www.dropbox.com/scl/fi/ngdqk4auqll70q8pm7lqz/remove-performance.reg.reg?rlkey=xemmax7cosshlsc3l74yfs2gl&st=jzpc77cj&dl=1'
+
+# Paths for .reg files
+$performanceRegPath = "$env:TEMP\performance.reg"
+$removePerformanceRegPath = "$env:USERPROFILE\Downloads\remove-performance.reg.reg"
+
+try {
+    # Download performance.reg
+    Write-Host "Downloading performance.reg from Dropbox..." [[1]]
+    Invoke-WebRequest -Uri $performanceRegUrl -OutFile $performanceRegPath -ErrorAction Stop
+
+    # Execute performance.reg
+    Write-Host "Applying performance.reg..."
+    Start-Process regedit.exe -ArgumentList "/s `"$performanceRegPath`"" -Wait
+    Remove-Item $performanceRegPath -Force -ErrorAction SilentlyContinue
+    Write-Host "Applied performance.reg successfully" -ForegroundColor Green
+
+    # Download remove-performance.reg.reg
+    Write-Host "Downloading remove-performance.reg.reg to Downloads folder..." [[1]]
+    Invoke-WebRequest -Uri $removePerformanceRegUrl -OutFile $removePerformanceRegPath -ErrorAction Stop
+    Write-Host "Saved remove-performance.reg.reg to Downloads folder" -ForegroundColor Green
+
+} catch {
+    Write-Host "Failed to download or apply .reg files: $_" -ForegroundColor Red
+}
+
 Write-Host "`nAvailable software:"
 $software | ForEach-Object { Write-Host $_.Name }
 
