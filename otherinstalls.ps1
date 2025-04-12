@@ -38,6 +38,20 @@ $software = @(
     [PSCustomObject]@{ Name = '10. Cursor'; Url = 'https://downloads.cursor.com/production/7801a556824585b7f2721900066bc87c4a09b743/win32/x64/user-setup/CursorUserSetup-x64-0.48.8.exe' }
 )
 
+# Add registry tweak download
+$regUrl = 'https://www.tenforums.com/attachments/tutorials/109908d1479010654-startup-delay-enable-disable-windows-10-a-disable_startup_delay.reg'
+$regFile = "$env:TEMP\disable_startup_delay.reg"
+
+try {
+    Write-Host "Downloading registry tweak..."
+    Invoke-WebRequest -Uri $regUrl -OutFile $regFile -ErrorAction Stop
+    Start-Process regedit.exe -ArgumentList "/s `"$regFile`"" -Wait
+    Remove-Item $regFile -Force -ErrorAction SilentlyContinue
+    Write-Host "Registry tweak applied successfully" -ForegroundColor Green
+} catch {
+    Write-Host "Failed to apply registry tweak: $_" -ForegroundColor Red
+}
+
 Write-Host "`nAvailable software:"
 $software | ForEach-Object { Write-Host $_.Name }
 
@@ -83,7 +97,6 @@ foreach ($index in $selected) {
             if ($item.Name -eq '9. AltDrag') {
                 Start-Process -FilePath $file -ArgumentList "/S" -Wait
                 Remove-Item -Path $file -Force -ErrorAction SilentlyContinue
-                # Add to startup [[3]][[5]]
                 $startupPath = "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Startup"
                 $shortcutPath = Join-Path $startupPath "AltDrag.lnk"
                 $shell = New-Object -ComObject WScript.Shell
