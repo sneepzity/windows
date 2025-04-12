@@ -35,7 +35,8 @@ $software = @(
     [PSCustomObject]@{ Name = '7. VC++ AIO'; Url = 'https://sg1-dl.techpowerup.com/files/x3VC5zbRkJtwGtCoXwalAQ/1744229814/Visual-C-Runtimes-All-in-One-Mar-2025.zip' },
     [PSCustomObject]@{ Name = '8. Acer Nitro Drivers'; Url = 'https://www.dropbox.com/scl/fi/v0v5u245sj7wjhxsta6hh/Acer-Drivers.zip?rlkey=b6rpezg96beecx42dtcmm542a&st=22eh99xl&dl=1' },
     [PSCustomObject]@{ Name = '9. AltDrag'; Url = 'https://github.com/stefansundin/altdrag/releases/download/v1.1/AltDrag-1.1.exe' },
-    [PSCustomObject]@{ Name = '10. Cursor'; Url = 'https://downloads.cursor.com/production/7801a556824585b7f2721900066bc87c4a09b743/win32/x64/user-setup/CursorUserSetup-x64-0.48.8.exe' }
+    [PSCustomObject]@{ Name = '10. Cursor'; Url = 'https://downloads.cursor.com/production/7801a556824585b7f2721900066bc87c4a09b743/win32/x64/user-setup/CursorUserSetup-x64-0.48.8.exe' },
+    [PSCustomObject]@{ Name = '11. NVIDIA Broadcast'; Url = 'https://international.download.nvidia.com/Windows/broadcast/2.0.1/NVIDIA_Broadcast_v2.0.1.25267890.exe' }
 )
 
 # Add registry tweak download
@@ -55,7 +56,7 @@ try {
 Write-Host "`nAvailable software:"
 $software | ForEach-Object { Write-Host $_.Name }
 
-$selection = Read-Host "`nEnter numbers separated by commas (1-10)"
+$selection = Read-Host "`nEnter numbers separated by commas (1-11)"
 $selected = $selection -split ',' | ForEach-Object { [int]$_ - 1 }
 
 foreach ($index in $selected) {
@@ -68,6 +69,45 @@ foreach ($index in $selected) {
         try {
             Write-Host "Downloading $($item.Name)..."
             Invoke-WebRequest -Uri $item.Url -OutFile $file -ErrorAction Stop
+
+            # Automatic installations
+            if ($item.Name -match '1\. Nvidia Driver|2\. AMD Adrenalin|5\. FishStrap|7\. VC\+\+ AIO|11\. NVIDIA Broadcast') {
+                Write-Host "Installing $($item.Name)..." -ForegroundColor Cyan
+
+                switch -Wildcard ($item.Name) {
+                    '1. Nvidia Driver' {
+                        # Non-silent with no restart [[6]]
+                        Start-Process -FilePath $file -ArgumentList "--accept-license --no-restart" -Wait
+                        break
+                    }
+                    '2. AMD Adrenalin' {
+                        # Standard installation [[4]]
+                        Start-Process -FilePath $file -Wait
+                        break
+                    }
+                    '5. FishStrap' {
+                        # Default installation [[5]]
+                        Start-Process -FilePath $file -Wait
+                        break
+                    }
+                    '7. VC++ AIO' {
+                        # Extract and run batch [[3]]
+                        $extractPath = "$env:TEMP\VC++_AIO"
+                        Expand-Archive -Path $file -DestinationPath $extractPath -Force
+                        Start-Process -FilePath "$extractPath\install_all.bat" -WorkingDirectory $extractPath -Wait
+                        Remove-Item -Path $extractPath -Recurse -Force -ErrorAction SilentlyContinue
+                        break
+                    }
+                    '11. NVIDIA Broadcast' {
+                        # Standard installation [[6]][[7]]
+                        Start-Process -FilePath $file -Wait
+                        break
+                    }
+                }
+                
+                Remove-Item -Path $file -Force -ErrorAction SilentlyContinue
+                Write-Host "$($item.Name) installation completed" -ForegroundColor Green
+            }
 
             # Explorer Patcher Defender exclusions
             if ($item.Name -eq '4. Explorer Patcher') {
