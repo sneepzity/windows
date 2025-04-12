@@ -31,6 +31,6 @@ chocolatey-dev.ps1: (fourth)
 
 ```irm https://raw.githubusercontent.com/sneepzity/windows/refs/heads/main/chocolatey-dev.ps1 | iex```
 
-extra.ps1 (optional)
+fonts-extradrivers.ps1.ps1 (optional)
 
-```irm https://raw.githubusercontent.com/sneepzity/windows/refs/heads/main/extra.ps1 | iex```
+```irm https://raw.githubusercontent.com/sneepzity/windows/refs/heads/main/fonts-extradrivers.ps1.ps1 | iex```
