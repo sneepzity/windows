@@ -102,7 +102,8 @@ $softwareList = @(
     @{ Number = 25; Name = "UnigetUI"; Description = "Package manager GUI"; Package = "unigetui" },
     @{ Number = 26; Name = "Windows Terminal"; Description = "Modern terminal"; Package = "microsoft-windows-terminal" },
     @{ Number = 27; Name = "Alacritty"; Description = "GPU-accelerated terminal"; Package = "alacritty" },
-    @{ Number = 28; Name = "Zoom"; Description = "Video conferencing tool"; Package = "zoom" }
+    @{ Number = 28; Name = "Zoom"; Description = "Video conferencing tool"; Package = "zoom" },
+    @{ Number = 29; Name = "Windows Subsystem for Linux 2"; Description = "Linux environment on Windows"; Package = "wsl2" }
 )
 
 # Display Menu
