@@ -104,7 +104,8 @@ $softwareList = @(
     @{ Number = 27; Name = "Alacritty"; Description = "GPU-accelerated terminal"; Package = "alacritty" },
     @{ Number = 28; Name = "Zoom"; Description = "Video conferencing tool"; Package = "zoom" },
     @{ Number = 29; Name = "Windows Subsystem for Linux 2"; Description = "Linux environment on Windows"; Package = "wsl2" },
-    @{ Number = 30; Name = "Cygwin"; Description = "Linux-like environment for Windows"; Package = "cygwin" }
+    @{ Number = 30; Name = "Cygwin"; Description = "Linux-like environment for Windows"; Package = "cygwin" },
+    @{ Number = 31; Name = "Cyg-get"; Description = "Utility to install Cygwin packages and their dependencies"; Package = "cyg-get" }
 )
 
 # Display Menu
