@@ -103,7 +103,8 @@ $softwareList = @(
     @{ Number = 26; Name = "Windows Terminal"; Description = "Modern terminal"; Package = "microsoft-windows-terminal" },
     @{ Number = 27; Name = "Alacritty"; Description = "GPU-accelerated terminal"; Package = "alacritty" },
     @{ Number = 28; Name = "Zoom"; Description = "Video conferencing tool"; Package = "zoom" },
-    @{ Number = 29; Name = "Windows Subsystem for Linux 2"; Description = "Linux environment on Windows"; Package = "wsl2" }
+    @{ Number = 29; Name = "Windows Subsystem for Linux 2"; Description = "Linux environment on Windows"; Package = "wsl2" },
+    @{ Number = 30; Name = "Cygwin"; Description = "Linux-like environment for Windows"; Package = "cygwin" }
 )
 
 # Display Menu
