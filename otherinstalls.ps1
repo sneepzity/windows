@@ -39,20 +39,6 @@ $software = @(
     [PSCustomObject]@{ Name = '11. NVIDIA Broadcast'; Url = 'https://international.download.nvidia.com/Windows/broadcast/2.0.1/NVIDIA_Broadcast_v2.0.1.25267890.exe' }
 )
 
-# Add registry tweak download
-$regUrl = 'https://www.tenforums.com/attachments/tutorials/109908d1479010654-startup-delay-enable-disable-windows-10-a-disable_startup_delay.reg'
-$regFile = "$env:TEMP\disable_startup_delay.reg"
-
-try {
-    Write-Host "Downloading registry tweak..."
-    Invoke-WebRequest -Uri $regUrl -OutFile $regFile -ErrorAction Stop
-    Start-Process regedit.exe -ArgumentList "/s `"$regFile`"" -Wait
-    Remove-Item $regFile -Force -ErrorAction SilentlyContinue
-    Write-Host "Registry tweak applied successfully" -ForegroundColor Green
-} catch {
-    Write-Host "Failed to apply registry tweak: $_" -ForegroundColor Red
-}
-
 # Download and handle performance.reg files
 Write-Host "Downloading and applying performance tweaks..." -ForegroundColor Cyan
 $performanceRegUrl = 'https://www.dropbox.com/scl/fi/k56j578r87egwpk4oh4hp/performance.reg?rlkey=9ag20yi2uo6e5o2bqx4if0ko8&st=17yoy9eo&dl=1'
