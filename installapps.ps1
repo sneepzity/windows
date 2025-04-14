@@ -45,45 +45,88 @@ function Install-Chocolatey {
     }
 }
 
+function Install-Scoop {
+    try {
+        Write-Log "Attempting Scoop installation"
+        Set-ExecutionPolicy RemoteSigned -Scope CurrentUser -Force
+        Invoke-RestMethod -Uri https://get.scoop.sh | Invoke-Expression
+        Write-Log "Scoop installed successfully"
+    } catch {
+        $errorMsg = "ERROR: Failed to install Scoop: $_"
+        Write-Host $errorMsg -ForegroundColor Red
+        Write-Log $errorMsg
+        exit 1
+    }
+}
+
+function Add-ScoopBucket {
+    param([string]$bucket)
+    try {
+        Write-Log "Adding Scoop bucket: $bucket"
+        scoop bucket add $bucket
+        Write-Log "Successfully added bucket: $bucket"
+    } catch {
+        $errorMsg = "ERROR: Failed to add Scoop bucket $bucket: $_"
+        Write-Host $errorMsg -ForegroundColor Red
+        Write-Log $errorMsg
+    }
+}
+
 # Check and install package managers
+if (-not (Get-Command scoop -ErrorAction SilentlyContinue)) {
+    Write-Host "Scoop not found, installing..." -ForegroundColor Yellow
+    Write-Log "Scoop not found, installing..."
+    Install-Scoop
+    
+    # Add essential buckets
+    Add-ScoopBucket "extras"
+    Add-ScoopBucket "versions"
+    Add-ScoopBucket "nerd-fonts"
+    Add-ScoopBucket "nonportable"
+    Add-ScoopBucket "games"
+}
+
 if (-not (Get-Command choco -ErrorAction SilentlyContinue)) {
+    Write-Host "Chocolatey not found, installing..." -ForegroundColor Yellow
     Write-Log "Chocolatey not found, installing..."
     Install-Chocolatey
 }
 
-# Software List (All Chocolatey)
+# Software List (Mix of Scoop and Chocolatey)
 $softwareList = @(
-    @{ Number = 1; Name = "Zen Browser"; Description = "Firefox-based web browser"; Package = "zen-browser" },
-    @{ Number = 2; Name = "Greenshot"; Description = "Screenshot tool"; Package = "greenshot" },
-    @{ Number = 3; Name = "Revo Uninstaller"; Description = "Advanced uninstaller"; Package = "revo-uninstaller" },
-    @{ Number = 4; Name = ".NET 6 Runtime"; Description = "Microsoft .NET runtime"; Package = "dotnet-6.0-runtime" },
-    @{ Number = 5; Name = "VC++ AIO"; Description = "Visual C++ Redistributables"; Package = "vcredist-all" },
-    @{ Number = 6; Name = "WebView2 Runtime"; Description = "Edge WebView2 runtime"; Package = "webview2-runtime" },
-    @{ Number = 7; Name = "Everything Search"; Description = "Fast file search tool"; Package = "everything" },
-    @{ Number = 8; Name = "Everything Toolbar"; Description = "Search toolbar for Windows"; Package = "everythingtoolbar" },
-    @{ Number = 9; Name = "Free Download Manager"; Description = "Download accelerator"; Package = "freedownloadmanager" },
-    @{ Number = 10; Name = "Icaros Shell"; Description = "Media file thumbnails"; Package = "icaros" },
-    @{ Number = 11; Name = "NanaZip"; Description = "File archiver"; Package = "nanazip" },
-    @{ Number = 12; Name = "Spotify"; Description = "Music streaming service"; Package = "spotify" },
-    @{ Number = 13; Name = "YouTube Music"; Description = "Music player"; Package = "th-ch-youtube-music" },
-    @{ Number = 14; Name = "Discord"; Description = "Chat and communication platform"; Package = "discord" },
-    @{ Number = 15; Name = "Flow Launcher"; Description = "Productivity launcher"; Package = "flow-launcher" },
-    @{ Number = 16; Name = "NextDNS"; Description = "DNS privacy tool"; Package = "nextdns" },
-    @{ Number = 17; Name = "Notepad++"; Description = "Text/code editor"; Package = "notepadplusplus" },
-    @{ Number = 18; Name = "Oracle VirtualBox"; Description = "Virtualization tool"; Package = "virtualbox" },
-    @{ Number = 19; Name = "EarTrumpet"; Description = "Volume control utility"; Package = "eartrumpet" },
-    @{ Number = 20; Name = "Spicetify"; Description = "Spotify customization tool"; Package = "spicetify-cli" },
-    @{ Number = 21; Name = "AutoHotkey"; Description = "Automation scripting"; Package = "autohotkey" },
-    @{ Number = 22; Name = "Playnite"; Description = "Game library manager"; Package = "playnite" },
-    @{ Number = 23; Name = "PowerToys"; Description = "Windows utilities"; Package = "powertoys" },
-    @{ Number = 24; Name = "Rainmeter"; Description = "Desktop customization"; Package = "rainmeter" },
-    @{ Number = 25; Name = "UnigetUI"; Description = "Package manager GUI"; Package = "unigetui" },
-    @{ Number = 26; Name = "Windows Terminal"; Description = "Modern terminal"; Package = "microsoft-windows-terminal" },
-    @{ Number = 27; Name = "Alacritty"; Description = "GPU-accelerated terminal"; Package = "alacritty" },
-    @{ Number = 28; Name = "Zoom"; Description = "Video conferencing tool"; Package = "zoom" },
-    @{ Number = 29; Name = "Windows Subsystem for Linux 2"; Description = "Linux environment on Windows"; Package = "wsl2" },
-    @{ Number = 30; Name = "Cygwin"; Description = "Linux-like environment for Windows"; Package = "cygwin" },
-    @{ Number = 31; Name = "Cyg-get"; Description = "Utility to install Cygwin packages"; Package = "cyg-get" }
+    @{ Number = 1; Name = "Zen Browser"; Description = "Firefox-based web browser"; Manager = "chocolatey"; Package = "zen-browser" },
+    @{ Number = 2; Name = "Greenshot"; Description = "Screenshot tool"; Manager = "scoop"; Package = "greenshot"; Bucket = "extras" },
+    @{ Number = 3; Name = "Revo Uninstaller"; Description = "Advanced uninstaller"; Manager = "scoop"; Package = "revouninstaller"; Bucket = "extras" },
+    @{ Number = 4; Name = ".NET 6 Runtime"; Description = "Microsoft .NET runtime"; Manager = "chocolatey"; Package = "dotnet-6.0-runtime" },
+    @{ Number = 5; Name = "VC++ AIO"; Description = "Visual C++ Redistributables"; Manager = "scoop"; Package = "vcredist-aio"; Bucket = "extras" },
+    @{ Number = 6; Name = "WebView2 Runtime"; Description = "Edge WebView2 runtime"; Manager = "chocolatey"; Package = "webview2-runtime" },
+    @{ Number = 7; Name = "Everything Search"; Description = "Fast file search tool"; Manager = "scoop"; Package = "everything"; Bucket = "extras" },
+    @{ Number = 8; Name = "Everything Toolbar"; Description = "Search toolbar for Windows"; Manager = "scoop"; Package = "everythingtoolbar"; Bucket = "extras" },
+    @{ Number = 9; Name = "Free Download Manager"; Description = "Download accelerator"; Manager = "scoop"; Package = "freedownloadmanager"; Bucket = "extras" },
+    @{ Number = 10; Name = "Icaros Shell"; Description = "Media file thumbnails"; Manager = "scoop"; Package = "icaros-np"; Bucket = "nonportable" },
+    @{ Number = 11; Name = "NanaZip"; Description = "File archiver"; Manager = "scoop"; Package = "nanazip"; Bucket = "main" },
+    @{ Number = 12; Name = "Spotify"; Description = "Music streaming service"; Manager = "scoop"; Package = "spotify"; Bucket = "extras" },
+    @{ Number = 13; Name = "YouTube Music"; Description = "Music player"; Manager = "scoop"; Package = "youtube-music"; Bucket = "extras" },
+    @{ Number = 14; Name = "Vesktop"; Description = "Enhanced Discord client"; Manager = "scoop"; Package = "vesktop"; Bucket = "extras" },
+    @{ Number = 15; Name = "Flow Launcher"; Description = "Productivity launcher"; Manager = "scoop"; Package = "flow-launcher"; Bucket = "extras" },
+    @{ Number = 16; Name = "NextDNS"; Description = "DNS privacy tool"; Manager = "scoop"; Package = "nextdns"; Bucket = "main" },
+    @{ Number = 17; Name = "Notepad++"; Description = "Text/code editor"; Manager = "scoop"; Package = "notepadplusplus"; Bucket = "extras" },
+    @{ Number = 18; Name = "Oracle VirtualBox"; Description = "Virtualization tool"; Manager = "scoop"; Package = "virtualbox-np"; Bucket = "nonportable" },
+    @{ Number = 19; Name = "EarTrumpet"; Description = "Volume control utility"; Manager = "scoop"; Package = "eartrumpet"; Bucket = "extras" },
+    @{ Number = 20; Name = "Spicetify + Themes"; Description = "Spotify customization tool"; Manager = "scoop"; Package = "spicetify-cli spicetify-themes"; Bucket = "extras" },
+    @{ Number = 21; Name = "AutoHotkey"; Description = "Automation scripting"; Manager = "scoop"; Package = "autohotkey"; Bucket = "extras" },
+    @{ Number = 22; Name = "Playnite"; Description = "Game library manager"; Manager = "scoop"; Package = "playnite"; Bucket = "extras" },
+    @{ Number = 23; Name = "PowerToys"; Description = "Windows utilities"; Manager = "scoop"; Package = "powertoys"; Bucket = "extras" },
+    @{ Number = 24; Name = "Rainmeter"; Description = "Desktop customization"; Manager = "scoop"; Package = "rainmeter"; Bucket = "extras" },
+    @{ Number = 25; Name = "UnigetUI"; Description = "Package manager GUI"; Manager = "scoop"; Package = "unigetui"; Bucket = "extras" },
+    @{ Number = 26; Name = "Windows Terminal"; Description = "Modern terminal"; Manager = "scoop"; Package = "windows-terminal"; Bucket = "extras" },
+    @{ Number = 27; Name = "Alacritty"; Description = "GPU-accelerated terminal"; Manager = "scoop"; Package = "alacritty"; Bucket = "extras" },
+    @{ Number = 28; Name = "Zoom"; Description = "Video conferencing tool"; Manager = "scoop"; Package = "zoom"; Bucket = "extras" },
+    @{ Number = 29; Name = "Windows Subsystem for Linux 2"; Description = "Linux environment on Windows"; Manager = "chocolatey"; Package = "wsl2" },
+    @{ Number = 30; Name = "Cygwin"; Description = "Linux-like environment for Windows"; Manager = "chocolatey"; Package = "cygwin" },
+    @{ Number = 31; Name = "Cyg-get"; Description = "Utility to install Cygwin packages"; Manager = "chocolatey"; Package = "cyg-get" },
+    @{ Number = 32; Name = "Cursor"; Description = "AI-powered code editor"; Manager = "scoop"; Package = "cursor"; Bucket = "extras" },
+    @{ Number = 33; Name = "OBS Studio"; Description = "Video recording/streaming"; Manager = "scoop"; Package = "obs-studio"; Bucket = "extras" }
 )
 
 # Display Menu
@@ -107,20 +150,43 @@ foreach ($num in $selectedNumbers) {
         Write-Log "Selected: $($item.Name) ($($item.Package))"
         Write-Host "Installing $($item.Name)..."
 
-        # Custom flags for specific packages
-        $chocoArgs = ""
-        if ($item.Package -eq "zen-browser") { 
-            $chocoArgs += "--pre" 
-        }
-        if ($item.Package -eq "freedownloadmanager") { 
-            $chocoArgs += "--ignore-checksums"
-        }
+        if ($item.Manager -eq "scoop") {
+            # Add bucket if specified and not already added
+            if ($item.Bucket) {
+                $existingBuckets = scoop bucket list
+                if (-not ($existingBuckets -match $item.Bucket)) {
+                    Write-Log "Adding Scoop bucket: $($item.Bucket)"
+                    scoop bucket add $item.Bucket
+                }
+            }
 
-        Write-Log "Using Chocolatey for $($item.Name) installation"
-        choco install $item.Package -y --no-progress $(if($chocoArgs){$chocoArgs})
+            Write-Log "Using Scoop for $($item.Name) installation"
+            # Handle multiple packages (like spicetify + themes)
+            $packages = $item.Package -split ' '
+            foreach ($package in $packages) {
+                Write-Log "Installing $package"
+                scoop install $package
 
-        if ($LASTEXITCODE -ne 0) {
-            throw "Installation failed with exit code $LASTEXITCODE"
+                if ($LASTEXITCODE -ne 0) {
+                    throw "Scoop installation failed with exit code $LASTEXITCODE for $package"
+                }
+            }
+        } else {
+            # Custom flags for specific Chocolatey packages
+            $chocoArgs = ""
+            if ($item.Package -eq "zen-browser") { 
+                $chocoArgs += "--pre" 
+            }
+            if ($item.Package -eq "freedownloadmanager") { 
+                $chocoArgs += "--ignore-checksums"
+            }
+
+            Write-Log "Using Chocolatey for $($item.Name) installation"
+            choco install $item.Package -y --no-progress $(if($chocoArgs){$chocoArgs})
+
+            if ($LASTEXITCODE -ne 0) {
+                throw "Chocolatey installation failed with exit code $LASTEXITCODE"
+            }
         }
 
         Write-Log "Successfully installed $($item.Name)"
