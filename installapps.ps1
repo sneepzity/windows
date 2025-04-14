@@ -110,10 +110,10 @@ foreach ($num in $selectedNumbers) {
         # Custom flags for specific packages
         $chocoArgs = ""
         if ($item.Package -eq "zen-browser") { 
-            $chocoArgs += "--pre " 
+            $chocoArgs += "--pre" 
         }
         if ($item.Package -eq "freedownloadmanager") { 
-            $chocoArgs += "--ignore-checksums "
+            $chocoArgs += "--ignore-checksums"
         }
 
         Write-Log "Using Chocolatey for $($item.Name) installation"
