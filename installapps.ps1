@@ -135,8 +135,10 @@ foreach ($num in $selectedNumbers) {
             Write-Log "Using Winget for Vesktop installation"
             winget install --id $item.Package --exact --silent --accept-package-agreements
         } else {
+            # Add --pre flag for Zen Browser [[1]][[7]]
+            $chocoArgs = if ($item.Package -eq "zen-browser") { "--pre" } else { "" }
             Write-Log "Using Chocolatey for $($item.Name) installation"
-            choco install $item.Package -y --no-progress
+            choco install $item.Package -y --no-progress $chocoArgs
         }
 
         if ($LASTEXITCODE -ne 0) {
