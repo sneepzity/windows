@@ -117,7 +117,7 @@ foreach ($num in $selectedNumbers) {
         }
 
         Write-Log "Using Chocolatey for $($item.Name) installation"
-        choco install $item.Package -y --no-progress $chocoArgs
+        choco install $item.Package -y --no-progress $(if($chocoArgs){$chocoArgs})
 
         if ($LASTEXITCODE -ne 0) {
             throw "Installation failed with exit code $LASTEXITCODE"
