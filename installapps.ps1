@@ -59,19 +59,6 @@ function Install-Scoop {
     }
 }
 
-function Add-ScoopBucket {
-    param([string]$bucket)
-    try {
-        Write-Log "Adding Scoop bucket: $bucket"
-        scoop bucket add $bucket
-        Write-Log "Successfully added bucket: $bucket"
-    } catch {
-        $errorMsg = "ERROR: Failed to add Scoop bucket $bucket: $_"
-        Write-Host $errorMsg -ForegroundColor Red
-        Write-Log $errorMsg
-    }
-}
-
 # Check and install package managers
 if (-not (Get-Command scoop -ErrorAction SilentlyContinue)) {
     Write-Host "Scoop not found, installing..." -ForegroundColor Yellow
@@ -79,11 +66,12 @@ if (-not (Get-Command scoop -ErrorAction SilentlyContinue)) {
     Install-Scoop
     
     # Add essential buckets
-    Add-ScoopBucket "extras"
-    Add-ScoopBucket "versions"
-    Add-ScoopBucket "nerd-fonts"
-    Add-ScoopBucket "nonportable"
-    Add-ScoopBucket "games"
+    Write-Log "Adding essential Scoop buckets"
+    scoop bucket add extras
+    scoop bucket add versions
+    scoop bucket add nerd-fonts
+    scoop bucket add nonportable
+    scoop bucket add games
 }
 
 if (-not (Get-Command choco -ErrorAction SilentlyContinue)) {
@@ -126,7 +114,9 @@ $softwareList = @(
     @{ Number = 30; Name = "Cygwin"; Description = "Linux-like environment for Windows"; Manager = "chocolatey"; Package = "cygwin" },
     @{ Number = 31; Name = "Cyg-get"; Description = "Utility to install Cygwin packages"; Manager = "chocolatey"; Package = "cyg-get" },
     @{ Number = 32; Name = "Cursor"; Description = "AI-powered code editor"; Manager = "scoop"; Package = "cursor"; Bucket = "extras" },
-    @{ Number = 33; Name = "OBS Studio"; Description = "Video recording/streaming"; Manager = "scoop"; Package = "obs-studio"; Bucket = "extras" }
+    @{ Number = 33; Name = "OBS Studio"; Description = "Video recording/streaming"; Manager = "scoop"; Package = "obs-studio"; Bucket = "extras" },
+    @{ Number = 34; Name = "Peace APO Equalizer"; Description = "Audio equalizer suite"; Manager = "scoop"; Package = "equalizer-apo-np peace-np"; Bucket = "nonportable"; Sequential = $true },
+    @{ Number = 35; Name = "Steam"; Description = "Gaming platform and store"; Manager = "chocolatey"; Package = "steam" }
 )
 
 # Display Menu
@@ -163,12 +153,31 @@ foreach ($num in $selectedNumbers) {
             Write-Log "Using Scoop for $($item.Name) installation"
             # Handle multiple packages (like spicetify + themes)
             $packages = $item.Package -split ' '
-            foreach ($package in $packages) {
-                Write-Log "Installing $package"
-                scoop install $package
+            
+            # Check if packages need to be installed sequentially
+            if ($item.Sequential) {
+                foreach ($package in $packages) {
+                    Write-Log "Installing $package"
+                    scoop install $package
 
-                if ($LASTEXITCODE -ne 0) {
-                    throw "Scoop installation failed with exit code $LASTEXITCODE for $package"
+                    if ($LASTEXITCODE -ne 0) {
+                        throw "Scoop installation failed with exit code $LASTEXITCODE for $package"
+                    }
+                    
+                    # For Peace APO, wait a bit after installing equalizer-apo before installing peace
+                    if ($package -eq "equalizer-apo-np") {
+                        Write-Log "Waiting 5 seconds after equalizer-apo-np installation before installing peace-np"
+                        Start-Sleep -Seconds 5
+                    }
+                }
+            } else {
+                foreach ($package in $packages) {
+                    Write-Log "Installing $package"
+                    scoop install $package
+
+                    if ($LASTEXITCODE -ne 0) {
+                        throw "Scoop installation failed with exit code $LASTEXITCODE for $package"
+                    }
                 }
             }
         } else {
