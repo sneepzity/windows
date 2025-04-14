@@ -45,35 +45,13 @@ function Install-Chocolatey {
     }
 }
 
-function Install-Winget {
-    try {
-        Write-Log "Attempting Winget installation"
-        $progressPreference = 'silentlyContinue'
-        $wingetMsix = "$env:TEMP\Microsoft.DesktopAppInstaller_8wekyb3d8bbwe.msixbundle"
-        Invoke-WebRequest -Uri "https://aka.ms/getwinget" -OutFile $wingetMsix
-        Add-AppxPackage -Path $wingetMsix
-        Remove-Item $wingetMsix
-        Write-Log "Winget installed successfully"
-    } catch {
-        $errorMsg = "ERROR: Failed to install Winget: $_"
-        Write-Host $errorMsg -ForegroundColor Red
-        Write-Log $errorMsg
-        exit 1
-    }
-}
-
 # Check and install package managers
 if (-not (Get-Command choco -ErrorAction SilentlyContinue)) {
     Write-Log "Chocolatey not found, installing..."
     Install-Chocolatey
 }
 
-if (-not (Get-Command winget -ErrorAction SilentlyContinue)) {
-    Write-Log "Winget not found, installing..."
-    Install-Winget
-}
-
-# Software List (Enforced managers)
+# Software List (All Chocolatey)
 $softwareList = @(
     @{ Number = 1; Name = "Zen Browser"; Description = "Firefox-based web browser"; Package = "zen-browser" },
     @{ Number = 2; Name = "Greenshot"; Description = "Screenshot tool"; Package = "greenshot" },
@@ -88,7 +66,7 @@ $softwareList = @(
     @{ Number = 11; Name = "NanaZip"; Description = "File archiver"; Package = "nanazip" },
     @{ Number = 12; Name = "Spotify"; Description = "Music streaming service"; Package = "spotify" },
     @{ Number = 13; Name = "YouTube Music"; Description = "Music player"; Package = "th-ch-youtube-music" },
-    @{ Number = 14; Name = "Vesktop"; Description = "Desktop environment"; Package = "Vesktop" },
+    @{ Number = 14; Name = "Discord"; Description = "Chat and communication platform"; Package = "discord" },
     @{ Number = 15; Name = "Flow Launcher"; Description = "Productivity launcher"; Package = "flow-launcher" },
     @{ Number = 16; Name = "NextDNS"; Description = "DNS privacy tool"; Package = "nextdns" },
     @{ Number = 17; Name = "Notepad++"; Description = "Text/code editor"; Package = "notepadplusplus" },
@@ -105,14 +83,13 @@ $softwareList = @(
     @{ Number = 28; Name = "Zoom"; Description = "Video conferencing tool"; Package = "zoom" },
     @{ Number = 29; Name = "Windows Subsystem for Linux 2"; Description = "Linux environment on Windows"; Package = "wsl2" },
     @{ Number = 30; Name = "Cygwin"; Description = "Linux-like environment for Windows"; Package = "cygwin" },
-    @{ Number = 31; Name = "Cyg-get"; Description = "Utility to install Cygwin packages and their dependencies"; Package = "cyg-get" }
+    @{ Number = 31; Name = "Cyg-get"; Description = "Utility to install Cygwin packages"; Package = "cyg-get" }
 )
 
 # Display Menu
 Write-Host "Select software to install (comma-separated numbers):`n"
 $softwareList | ForEach-Object {
-    $manager = if ($_.Package -eq "Vesktop") { "winget" } else { "choco" }
-    Write-Host "$($_.Number): $($_.Name) - $($_.Description) [$manager]"
+    Write-Host "$($_.Number): $($_.Name) - $($_.Description)"
 }
 
 # Process Selection
@@ -130,16 +107,17 @@ foreach ($num in $selectedNumbers) {
         Write-Log "Selected: $($item.Name) ($($item.Package))"
         Write-Host "Installing $($item.Name)..."
 
-        # Enforce package managers [[3]][[4]][[10]]
-        if ($item.Package -eq "Vesktop") {
-            Write-Log "Using Winget for Vesktop installation"
-            winget install --id $item.Package --exact --silent --accept-package-agreements
-        } else {
-            # Add --pre flag for Zen Browser [[1]][[7]]
-            $chocoArgs = if ($item.Package -eq "zen-browser") { "--pre" } else { "" }
-            Write-Log "Using Chocolatey for $($item.Name) installation"
-            choco install $item.Package -y --no-progress $chocoArgs
+        # Custom flags for specific packages
+        $chocoArgs = ""
+        if ($item.Package -eq "zen-browser") { 
+            $chocoArgs += "--pre " 
         }
+        if ($item.Package -eq "freedownloadmanager") { 
+            $chocoArgs += "--ignore-checksums " [[3]][[7]][[10]]
+        }
+
+        Write-Log "Using Chocolatey for $($item.Name) installation"
+        choco install $item.Package -y --no-progress $chocoArgs
 
         if ($LASTEXITCODE -ne 0) {
             throw "Installation failed with exit code $LASTEXITCODE"
