@@ -113,7 +113,7 @@ foreach ($num in $selectedNumbers) {
             $chocoArgs += "--pre " 
         }
         if ($item.Package -eq "freedownloadmanager") { 
-            $chocoArgs += "--ignore-checksums " [[3]][[7]][[10]]
+            $chocoArgs += "--ignore-checksums "
         }
 
         Write-Log "Using Chocolatey for $($item.Name) installation"
