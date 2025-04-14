@@ -27,10 +27,10 @@ otherinstalls.ps1: (third)
 
 ```irm https://raw.githubusercontent.com/sneepzity/windows/refs/heads/main/otherinstalls.ps1 | iex```
 
-chocolatey-dev.ps1: (fourth)
+dev.ps1: (fourth)
 
 ```irm https://raw.githubusercontent.com/sneepzity/windows/refs/heads/main/chocolatey-dev.ps1 | iex```
 
-fonts-extradrivers.ps1.ps1 (optional)
+extra.ps1 (optional)
 
 ```irm https://raw.githubusercontent.com/sneepzity/windows/refs/heads/main/fonts-extradrivers.ps1.ps1 | iex```
