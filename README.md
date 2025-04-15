@@ -10,6 +10,7 @@ Steps
 3. Ensure you have an internet connection
 4. Select a script - recommended to follow the order below
 5. Paste it into the powershell window that you opened earlier (THE SCRIPT WILL NOT WORK, IT WILL JUST CLOSE **IF** YOU ARE USING A NON-ADMINISTRATOR/NON-PRIVILEGED POWERSHELL SESSION)
+**6. ONLY APPLY NUMBER 5 FOR EVERY SCRIPT EXCEPT INSTALL-SCOOP.PS1**
 
 usage: (in preferrable/best order)
 
@@ -17,6 +18,9 @@ usage: (in preferrable/best order)
 preliminary.ps1: (first)
 
 ```irm https://raw.githubusercontent.com/sneepzity/windows/refs/heads/main/preliminary.ps1 | iex```
+install-scoop.ps1: (first)
+
+```irm https://raw.githubusercontent.com/sneepzity/windows/refs/heads/main/install-scoop.ps1 | iex```
 
 installapps.ps1: (second)
 
