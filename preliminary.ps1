@@ -25,11 +25,15 @@ do {
    - Silent installation of Chocolatey package manager
    - Enables package management via CLI
 
-Enter numbers (1-4) separated by commas (no spaces):
+5. Scoop Installer with Default Buckets
+   - Installs Scoop package manager and adds main, extras, nonportable, games, and nerd-fonts buckets
+   - Enables CLI package management with extended repositories
+
+Enter numbers (1-5) separated by commas (no spaces):
 "@
 
     $choice = Read-Host "Selection"
-    $valid = $choice -match '^([1-4],)*[1-4]$'
+    $valid = $choice -match '^([1-5],)*[1-5]$'
 } while (!$valid)
 
 # Execution
@@ -68,6 +72,34 @@ $choice.Split(',') | ForEach-Object {
             Write-Error "Winget installation failed: $($_.Exception.Message)"
             exit 1
         }
+    } elseif ($_ -eq "5") {
+        # Run Scoop installation as the current user (not admin)
+        Write-Host "Installing Scoop as regular user..." -ForegroundColor Cyan
+        
+        # Get current user for the non-elevated process
+        $currentUser = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name
+        
+        # Create a script block for Scoop installation
+        $scoopScript = @'
+        Set-ExecutionPolicy RemoteSigned -Scope CurrentUser -Force
+        irm get.scoop.sh -useb | iex
+        scoop bucket add main
+        scoop bucket add extras
+        scoop bucket add nonportable
+        scoop bucket add games
+        scoop bucket add nerd-fonts
+        Write-Host "Scoop installation completed successfully." -ForegroundColor Green
+'@
+        
+        # Save to temp file
+        $tempFile = [System.IO.Path]::GetTempFileName() + ".ps1"
+        $scoopScript | Out-File -FilePath $tempFile -Encoding UTF8
+        
+        # Start a non-elevated PowerShell process as the current user
+        Start-Process powershell.exe -ArgumentList "-NoProfile -ExecutionPolicy Bypass -File `"$tempFile`"" -Wait
+        
+        # Clean up temp file
+        Remove-Item -Path $tempFile -Force -ErrorAction SilentlyContinue
     } else {
         Invoke-Expression $scripts[$_]
     }
