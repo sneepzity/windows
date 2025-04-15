@@ -40,7 +40,7 @@ $scripts = @{
 }
 
 # Sort choices to ensure winget (option 3) runs last if present
-$sortedChoices = $choice.Split(',') | Sort-Object -Descending { $_ -eq "3" }
+$sortedChoices = $choice.Split(',') | Sort-Object { $_ -eq "3" }
 
 foreach ($option in $sortedChoices) {
     Write-Host "Executing script $option..." -ForegroundColor Cyan
@@ -54,22 +54,16 @@ foreach ($option in $sortedChoices) {
                 Set-ExecutionPolicy RemoteSigned -Scope CurrentUser -Force
             }
             
-            Write-Host "Installing winget-install module..." -ForegroundColor Yellow
-            Install-Script -Name winget-install -Force -Scope CurrentUser -ErrorAction Stop
-            
-            # Create a new script block for winget installation that won't close the window
-            $wingetScriptBlock = {
-                Import-Module "$env:USERPROFILE\Documents\WindowsPowerShell\Modules\winget-install" -ErrorAction Stop
-                winget-install -Force -ErrorAction Stop
-            }
+            Write-Host "Installing winget-install script..." -ForegroundColor Yellow
+            Install-Script -Name winget-install -Force -ErrorAction Stop
             
             Write-Host "Executing winget installation..." -ForegroundColor Yellow
-            # Use Invoke-Command to run the script block in the current session
-            Invoke-Command -ScriptBlock $wingetScriptBlock
+            # Run the installed script directly
+            & winget-install -Force -ErrorAction Stop
             
             if ($currentPolicy -eq "Restricted") {
                 Write-Host "Restoring original execution policy..." -ForegroundColor Yellow
-                Set-ExecutionPolicy Restricted -Scope CurrentUser -Force
+                Set-ExecutionPolicy $currentPolicy -Scope CurrentUser -Force
             }
             
             Write-Host "Winget installation completed successfully." -ForegroundColor Green
