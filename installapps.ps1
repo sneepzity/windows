@@ -11,24 +11,8 @@ function Write-Log {
 
 Write-Log "Starting installation script"
 
-# Check and elevate privileges [[5]][[6]]
-$currentPrincipal = [Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()
-if (-not $currentPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")) {
-    Write-Log "Not running as administrator, attempting elevation..."
-    $scriptPath = $PSCommandPath
-    $arguments = "-NoProfile -ExecutionPolicy Bypass -File `"$scriptPath`" $args"
-    
-    try {
-        Start-Process -FilePath "powershell" -ArgumentList $arguments -Verb RunAs -ErrorAction Stop
-        Write-Log "Elevation successful"
-        exit
-    } catch {
-        $errorMsg = "Elevation failed: $_"
-        Write-Host $errorMsg -ForegroundColor Red
-        Write-Log $errorMsg
-        exit 1
-    }
-}
+# No administrator elevation required anymore
+Write-Log "Running in user context without administrator privileges"
 
 # Package Manager Setup
 function Install-Chocolatey {
@@ -64,20 +48,64 @@ if (-not (Get-Command scoop -ErrorAction SilentlyContinue)) {
     Write-Host "Scoop not found, installing..." -ForegroundColor Yellow
     Write-Log "Scoop not found, installing..."
     Install-Scoop
-    
-    # Add essential buckets
-    Write-Log "Adding essential Scoop buckets"
-    scoop bucket add extras
-    scoop bucket add versions
-    scoop bucket add nerd-fonts
-    scoop bucket add nonportable
-    scoop bucket add games
 }
 
 if (-not (Get-Command choco -ErrorAction SilentlyContinue)) {
     Write-Host "Chocolatey not found, installing..." -ForegroundColor Yellow
     Write-Log "Chocolatey not found, installing..."
     Install-Chocolatey
+}
+
+# Install Git if not already installed (needed for Scoop buckets)
+if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
+    Write-Host "Git not found, installing with Scoop..." -ForegroundColor Yellow
+    Write-Log "Git not found, installing with Scoop..."
+    scoop install git
+    
+    if ($LASTEXITCODE -ne 0) {
+        $errorMsg = "Failed to install Git with Scoop. Trying with Chocolatey..."
+        Write-Host $errorMsg -ForegroundColor Yellow
+        Write-Log $errorMsg
+        
+        choco install git -y --no-progress
+        
+        if ($LASTEXITCODE -ne 0) {
+            $errorMsg = "ERROR: Failed to install Git with Chocolatey. Cannot continue with bucket operations."
+            Write-Host $errorMsg -ForegroundColor Red
+            Write-Log $errorMsg
+            exit 1
+        }
+    }
+    
+    Write-Host "Git installed successfully" -ForegroundColor Green
+    Write-Log "Git installed successfully"
+    
+    # Refresh environment variables to make git available in current session
+    $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
+}
+
+# Add essential Scoop buckets
+Write-Log "Adding essential Scoop buckets"
+Write-Host "Adding essential Scoop buckets..." -ForegroundColor Yellow
+$buckets = @("extras", "versions", "nerd-fonts", "nonportable", "games")
+foreach ($bucket in $buckets) {
+    try {
+        $existingBuckets = scoop bucket list
+        if (-not ($existingBuckets -match $bucket)) {
+            Write-Log "Adding Scoop bucket: $bucket"
+            scoop bucket add $bucket
+            
+            if ($LASTEXITCODE -ne 0) {
+                Write-Host "Warning: Failed to add $bucket bucket, but continuing..." -ForegroundColor Yellow
+                Write-Log "Warning: Failed to add $bucket bucket, but continuing..."
+            }
+        } else {
+            Write-Log "Bucket $bucket already exists"
+        }
+    } catch {
+        Write-Host "Warning: Error while adding $bucket bucket: $_" -ForegroundColor Yellow
+        Write-Log "Warning: Error while adding $bucket bucket: $_"
+    }
 }
 
 # Software List (Mix of Scoop and Chocolatey)
