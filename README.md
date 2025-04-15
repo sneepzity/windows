@@ -18,20 +18,21 @@ usage: (in preferrable/best order)
 preliminary.ps1: (first)
 
 ```irm https://raw.githubusercontent.com/sneepzity/windows/refs/heads/main/preliminary.ps1 | iex```
-install-scoop.ps1: (first)
+
+install-scoop.ps1: (second)
 
 ```irm https://raw.githubusercontent.com/sneepzity/windows/refs/heads/main/install-scoop.ps1 | iex```
 
-installapps.ps1: (second)
+installapps.ps1: (third)
 
 ```irm https://raw.githubusercontent.com/sneepzity/windows/refs/heads/main/installapps.ps1 | iex```
 
 
-otherinstalls.ps1: (third)
+otherinstalls.ps1: (fourth)
 
 ```irm https://raw.githubusercontent.com/sneepzity/windows/refs/heads/main/otherinstalls.ps1 | iex```
 
-dev.ps1: (fourth)
+dev.ps1: (fifth)
 
 ```irm https://raw.githubusercontent.com/sneepzity/windows/refs/heads/main/chocolatey-dev.ps1 | iex```
 
