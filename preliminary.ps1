@@ -25,15 +25,11 @@ do {
    - Silent installation of Chocolatey package manager
    - Enables package management via CLI
 
-5. Scoop Installer with Default Buckets
-   - Installs Scoop package manager and adds main, extras, nonportable, games, and nerd-fonts buckets
-   - Enables CLI package management with extended repositories
-
-Enter numbers (1-5) separated by commas (no spaces):
+Enter numbers (1-4) separated by commas (no spaces):
 "@
 
     $choice = Read-Host "Selection"
-    $valid = $choice -match '^([1-5],)*[1-5]$'
+    $valid = $choice -match '^([1-4],)*[1-4]$'
 } while (!$valid)
 
 # Execution
@@ -43,9 +39,12 @@ $scripts = @{
     "4" = 'Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString(''https://community.chocolatey.org/install.ps1''))'
 }
 
-$choice.Split(',') | ForEach-Object {
-    Write-Host "Executing script $_..." -ForegroundColor Cyan
-    if ($_ -eq "3") {
+# Sort choices to ensure winget (option 3) runs last if present
+$sortedChoices = $choice.Split(',') | Sort-Object -Descending { $_ -eq "3" }
+
+foreach ($option in $sortedChoices) {
+    Write-Host "Executing script $option..." -ForegroundColor Cyan
+    if ($option -eq "3") {
         # Winget installation using winget-install method
         try {
             Write-Host "Installing Winget via PowerShell Gallery..." -ForegroundColor Cyan
@@ -57,10 +56,16 @@ $choice.Split(',') | ForEach-Object {
             
             Write-Host "Installing winget-install module..." -ForegroundColor Yellow
             Install-Script -Name winget-install -Force -Scope CurrentUser -ErrorAction Stop
-            Import-Module "$env:USERPROFILE\Documents\WindowsPowerShell\Modules\winget-install" -ErrorAction Stop
+            
+            # Create a new script block for winget installation that won't close the window
+            $wingetScriptBlock = {
+                Import-Module "$env:USERPROFILE\Documents\WindowsPowerShell\Modules\winget-install" -ErrorAction Stop
+                winget-install -Force -ErrorAction Stop
+            }
             
             Write-Host "Executing winget installation..." -ForegroundColor Yellow
-            winget-install -Force -ErrorAction Stop
+            # Use Invoke-Command to run the script block in the current session
+            Invoke-Command -ScriptBlock $wingetScriptBlock
             
             if ($currentPolicy -eq "Restricted") {
                 Write-Host "Restoring original execution policy..." -ForegroundColor Yellow
@@ -68,40 +73,15 @@ $choice.Split(',') | ForEach-Object {
             }
             
             Write-Host "Winget installation completed successfully." -ForegroundColor Green
+            Write-Host "Press Enter to continue..." -ForegroundColor Yellow
+            Read-Host
         } catch {
             Write-Error "Winget installation failed: $($_.Exception.Message)"
-            exit 1
+            Write-Host "Press Enter to continue..." -ForegroundColor Red
+            Read-Host
         }
-    } elseif ($_ -eq "5") {
-        # Run Scoop installation as the current user (not admin)
-        Write-Host "Installing Scoop as regular user..." -ForegroundColor Cyan
-        
-        # Get current user for the non-elevated process
-        $currentUser = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name
-        
-        # Create a script block for Scoop installation
-        $scoopScript = @'
-        Set-ExecutionPolicy RemoteSigned -Scope CurrentUser -Force
-        irm get.scoop.sh -useb | iex
-        scoop bucket add main
-        scoop bucket add extras
-        scoop bucket add nonportable
-        scoop bucket add games
-        scoop bucket add nerd-fonts
-        Write-Host "Scoop installation completed successfully." -ForegroundColor Green
-'@
-        
-        # Save to temp file
-        $tempFile = [System.IO.Path]::GetTempFileName() + ".ps1"
-        $scoopScript | Out-File -FilePath $tempFile -Encoding UTF8
-        
-        # Start a non-elevated PowerShell process as the current user
-        Start-Process powershell.exe -ArgumentList "-NoProfile -ExecutionPolicy Bypass -File `"$tempFile`"" -Wait
-        
-        # Clean up temp file
-        Remove-Item -Path $tempFile -Force -ErrorAction SilentlyContinue
     } else {
-        Invoke-Expression $scripts[$_]
+        Invoke-Expression $scripts[$option]
     }
 }
 
