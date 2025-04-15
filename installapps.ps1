@@ -82,11 +82,11 @@ if (-not (Get-Command choco -ErrorAction SilentlyContinue)) {
 
 # Software List (Mix of Scoop and Chocolatey)
 $softwareList = @(
+    @{ Number = 5; Name = "VC++ AIO"; Description = "Visual C++ Redistributables"; Manager = "scoop"; Package = "vcredist-aio"; Bucket = "extras"; Priority = $true },
     @{ Number = 1; Name = "Zen Browser"; Description = "Firefox-based web browser"; Manager = "chocolatey"; Package = "zen-browser" },
     @{ Number = 2; Name = "Greenshot"; Description = "Screenshot tool"; Manager = "scoop"; Package = "greenshot"; Bucket = "extras" },
     @{ Number = 3; Name = "Revo Uninstaller"; Description = "Advanced uninstaller"; Manager = "scoop"; Package = "revouninstaller"; Bucket = "extras" },
     @{ Number = 4; Name = ".NET 6 Runtime"; Description = "Microsoft .NET runtime"; Manager = "chocolatey"; Package = "dotnet-6.0-runtime" },
-    @{ Number = 5; Name = "VC++ AIO"; Description = "Visual C++ Redistributables"; Manager = "scoop"; Package = "vcredist-aio"; Bucket = "extras" },
     @{ Number = 6; Name = "WebView2 Runtime"; Description = "Edge WebView2 runtime"; Manager = "chocolatey"; Package = "webview2-runtime" },
     @{ Number = 7; Name = "Everything Search"; Description = "Fast file search tool"; Manager = "scoop"; Package = "everything"; Bucket = "extras" },
     @{ Number = 8; Name = "Everything Toolbar"; Description = "Search toolbar for Windows"; Manager = "scoop"; Package = "everythingtoolbar"; Bucket = "extras" },
@@ -129,14 +129,44 @@ $softwareList | ForEach-Object {
 $selection = Read-Host "`nEnter numbers (e.g., 1,3,5)"
 $selectedNumbers = $selection -split ',' | ForEach-Object { $_.Trim() }
 
+# Create a list to hold selected items
+$selectedItems = @()
+
+# First, check if VC++ AIO is in the selection
+$vcppSelected = $selectedNumbers -contains "5"
+
+# If not, add it
+if (-not $vcppSelected) {
+    Write-Host "Adding VC++ AIO as a dependency..." -ForegroundColor Yellow
+    Write-Log "Adding VC++ AIO as a dependency"
+    $vcppItem = $softwareList | Where-Object { $_.Number -eq 5 }
+    $selectedItems += $vcppItem
+}
+
+# Then add all other selected items
 foreach ($num in $selectedNumbers) {
-    try {
-        $item = $softwareList | Where-Object { $_.Number -eq [int]$num }
-        
-        if (-not $item) {
-            throw "Invalid selection: $num"
+    $item = $softwareList | Where-Object { $_.Number -eq [int]$num }
+    
+    if ($item) {
+        # Skip adding VC++ AIO twice if it was manually selected
+        if (-not ($item.Number -eq 5 -and $vcppSelected -and $selectedItems.Count -gt 0)) {
+            $selectedItems += $item
         }
-        
+    } else {
+        $errorMsg = "Invalid selection: $num"
+        Write-Host $errorMsg -ForegroundColor Red
+        Write-Log $errorMsg
+    }
+}
+
+# Sort the items so that VC++ AIO is first
+$sortedItems = @()
+$sortedItems += $selectedItems | Where-Object { $_.Priority -eq $true }
+$sortedItems += $selectedItems | Where-Object { $_.Priority -ne $true }
+
+# Install the sorted items
+foreach ($item in $sortedItems) {
+    try {
         Write-Log "Selected: $($item.Name) ($($item.Package))"
         Write-Host "Installing $($item.Name)..."
 
