@@ -9,6 +9,14 @@ Write-Host "Installing Scoop package manager..." -ForegroundColor Cyan
 try {
     Invoke-RestMethod -Uri https://get.scoop.sh | Invoke-Expression
     
+    # Install Git (required for buckets)
+    Write-Host "Installing Git (required for buckets)..." -ForegroundColor Cyan
+    scoop install git
+    
+    if ($LASTEXITCODE -ne 0) {
+        throw "Git installation failed with exit code $LASTEXITCODE"
+    }
+    
     # Add required buckets
     Write-Host "Adding additional Scoop buckets..." -ForegroundColor Cyan
     
@@ -26,11 +34,10 @@ try {
     
     Write-Host "  - Adding versions bucket" -ForegroundColor Yellow
     scoop bucket add versions
-
     
     Write-Host "Scoop installation and bucket configuration completed successfully!" -ForegroundColor Green
 } catch {
-    Write-Error "An error occurred during Scoop installation: $($_.Exception.Message)"
+    Write-Error "An error occurred during installation: $($_.Exception.Message)"
     exit 1
 }
 
