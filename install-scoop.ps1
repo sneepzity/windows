@@ -24,6 +24,10 @@ try {
     Write-Host "  - Adding nerd-fonts bucket" -ForegroundColor Yellow
     scoop bucket add nerd-fonts
     
+    Write-Host "  - Adding versions bucket" -ForegroundColor Yellow
+    scoop bucket add versions
+
+    
     Write-Host "Scoop installation and bucket configuration completed successfully!" -ForegroundColor Green
 } catch {
     Write-Error "An error occurred during Scoop installation: $($_.Exception.Message)"
