@@ -45,26 +45,12 @@ $sortedChoices = $choice.Split(',') | Sort-Object { $_ -eq "3" }
 foreach ($option in $sortedChoices) {
     Write-Host "Executing script $option..." -ForegroundColor Cyan
     if ($option -eq "3") {
-        # Winget installation using winget-install method
+        # Winget installation using direct download method
         try {
-            Write-Host "Installing Winget via PowerShell Gallery..." -ForegroundColor Cyan
-            $currentPolicy = Get-ExecutionPolicy
-            if ($currentPolicy -eq "Restricted") {
-                Write-Host "Temporarily setting execution policy..." -ForegroundColor Yellow
-                Set-ExecutionPolicy RemoteSigned -Scope CurrentUser -Force
-            }
+            Write-Host "Installing Winget via direct download..." -ForegroundColor Cyan
             
-            Write-Host "Installing winget-install script..." -ForegroundColor Yellow
-            Install-Script -Name winget-install -Force -ErrorAction Stop
-            
-            Write-Host "Executing winget installation..." -ForegroundColor Yellow
-            # Run the installed script directly
-            & winget-install -Force -ErrorAction Stop
-            
-            if ($currentPolicy -eq "Restricted") {
-                Write-Host "Restoring original execution policy..." -ForegroundColor Yellow
-                Set-ExecutionPolicy $currentPolicy -Scope CurrentUser -Force
-            }
+            # Execute the winget-install script directly
+            Invoke-Expression (Invoke-RestMethod -Uri "https://github.com/asheroto/winget-install/releases/latest/download/winget-install.ps1")
             
             Write-Host "Winget installation completed successfully." -ForegroundColor Green
             Write-Host "Press Enter to continue..." -ForegroundColor Yellow
