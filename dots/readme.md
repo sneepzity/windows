@@ -7,6 +7,7 @@ You'll need to install a few apps to get it all working, and then accordingly ad
 Once you're done setting up the files and apps, it's just drag and drop onto the root of C:\
 
 Instructions
+
 0. Install Scoop
 1. Install Flow Launcher
 2. Install Komorebi via scoop
